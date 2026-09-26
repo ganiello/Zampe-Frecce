@@ -31,19 +31,19 @@ Ordine dall'alto verso il basso:
 
 | Sezione | Righe (indicative) | Contenuto |
 |---|---|---|
-| `<head>` + `<style>` | 1 – ~500 | CSS globale, componenti UI, animazioni |
-| `<body>` | ~505 – ~510 | Solo tre contenitori: `#app`, `#confetti`, `#toast` |
-| `<script>` — costanti | ~515 – ~560 | `DICE_MAP`, `PALETTE`, limiti, timing |
-| `<script>` — stato | ~562 – ~600 | Oggetto `State`, `makeInitialGameState`, `getStartingPositions` |
-| `<script>` — logica pura | ~602 – ~700 | `attemptMove`, `checkWinner`, `advanceTurn`, `generateMathQuestion` |
-| `<script>` — suoni | ~702 – ~790 | `playSound(type)` |
-| `<script>` — utilità DOM | ~792 – ~830 | `el()` helper, `showToast()` |
-| `<script>` — render config | ~832 – ~1080 | Schermata iniziale |
-| `<script>` — render game | ~1082 – ~1400 | Schermata di gioco, griglia SVG, pannelli |
-| `<script>` — gestori eventi | ~1402 – ~1650 | Roll, target, penalità, prediction |
-| `<script>` — render vittoria | ~1652 – ~1720 | Schermata finale + coriandoli |
-| `<script>` — avvio | ~1722 – ~1728 | Setup iniziale e primo render |
-| `<script>` — `runTests()` | ~1732 – fine | Auto-test in fondo al file |
+| `<head>` + `<style>` | 1 – ~760 | CSS globale, componenti UI, animazioni, breakpoint responsive |
+| `<body>` | ~765 – ~770 | Solo tre contenitori: `#app`, `#confetti`, `#toast` |
+| `<script>` — costanti | ~775 – ~815 | `DICE_MAP`, `PALETTE`, limiti, timing |
+| `<script>` — stato | ~815 – ~860 | Oggetto `State`, `makeInitialGameState`, `getStartingPositions` |
+| `<script>` — logica pura | ~860 – ~950 | `attemptMove`, `checkWinner`, `advanceTurn`, `generateMathQuestion` |
+| `<script>` — suoni | ~955 – ~1020 | `playSound(type)` |
+| `<script>` — utilità DOM | ~1020 – ~1055 | `el()` helper, `showToast()` |
+| `<script>` — render config | ~1075 – ~1310 | Schermata iniziale |
+| `<script>` — render game | ~1315 – ~1690 | Schermata di gioco, griglia SVG, pannelli |
+| `<script>` — gestori eventi | ~1790 – ~2000 | Roll, target, penalità, prediction |
+| `<script>` — render vittoria | ~2145 – ~2220 | Schermata finale + coriandoli |
+| `<script>` — avvio | ~2222 – ~2228 | Setup iniziale e primo render |
+| `<script>` — `runTests()` | ~2230 – fine | Auto-test in fondo al file |
 
 I numeri sono indicativi: usa Grep per trovare i punti esatti.
 
@@ -190,6 +190,24 @@ si usano funzioni di aggiornamento mirato che mutano il DOM esistente:
 
 Chiamate da `executeMove()` invece di `render()` per far partire la transizione.
 
+**Layout della schermata di gioco (responsive)**: `.game-screen` usa
+`display: grid` con `grid-template-areas`; il wrapper `.game-main` ha
+`display: contents` così i suoi figli (`.grid-container`, `.side-panel`)
+partecipano direttamente alla griglia principale insieme a header, banner
+e `.players-panel`. Questo permette di riorganizzare la posizione dei
+pannelli con sole media query, senza toccare la struttura HTML in
+`renderGame()`. Breakpoint attuali:
+
+- **Base (mobile-first)**: colonna singola, ordine header / banner / griglia
+  (1fr) / dado / giocatori (max 22vh, scrollabili).
+- **`min-width: 900px`** (desktop/LIM): due colonne. Griglia a sinistra
+  che span-a due righe; a destra il pannello dado sopra e il pannello
+  giocatori sotto (che riempie il resto).
+- **`max-width: 599px`** (phone portrait): pannello dado in `flex-wrap`
+  orizzontale (dado + freccia in linea, bottone e legenda a larghezza
+  piena), etichette "FACCIA N" nascoste per compattezza, giocatori
+  limitati a 20vh.
+
 ---
 
 ## 7. Flusso di un turno
@@ -234,7 +252,13 @@ finishTurn()
 
 ## 8. Dettagli SVG della griglia
 
-`renderGridSvg()` costruisce un `<svg>` con `viewBox` che scala al contenitore.
+`renderGridSvg()` costruisce un `<svg>` con **solo** `viewBox` e
+`preserveAspectRatio="xMidYMid meet"` — nessun attributo `width`/`height`
+in pixel. Le dimensioni renderizzate arrivano dalla CSS
+(`.grid-container svg { width: 100%; height: 100%; }`), quindi la griglia
+riempie sempre tutto lo spazio disponibile mantenendo l'aspect ratio. Se
+vuoi imporre un limite massimo o cambiare il modo in cui scala, agisci
+sulla CSS del container, non sugli attributi dell'`<svg>`.
 
 Ordine di disegno (importante per z-index):
 
@@ -321,6 +345,19 @@ Modifica `calculateDefaultMaxTurns(rows)`. Il valore si applica
 automaticamente ogni volta che l'utente cambia le righe (a meno che
 non abbia toccato lo stepper turni, nel qual caso `maxTurnsManuallySet` è
 `true` e il calcolo non parte).
+
+### Cambiare i breakpoint responsive o riorganizzare i pannelli
+Tutto in CSS (sezione `============ SCHERMATA GIOCO ============`):
+1. Il layout base è mobile-first (colonna singola con
+   `grid-template-areas: "header" "banner" "grid" "side" "players"`).
+2. Le media query `min-width: 900px` e `max-width: 599px` ridefiniscono
+   `grid-template-columns/rows/areas` per riorganizzare i pannelli.
+3. Poiché `.game-main` è `display: contents`, i suoi figli
+   (`.grid-container`, `.side-panel`) rispondono direttamente alle
+   `grid-area` definite sul `.game-screen`: non serve toccare l'HTML in
+   `renderGame()` per spostare i pannelli.
+4. Se aggiungi un nuovo pannello nel `renderGame()`, dagli una `class`
+   dedicata e assegnala a un `grid-area` in tutte le media query.
 
 ---
 
@@ -411,6 +448,35 @@ Poi: `node runtests.js` dalla cartella del progetto.
   potresti trovare l'audio muto sui browser strict (Safari, iOS).
 - **`viewBox` SVG e `MARGIN`**: `MARGIN` deve essere ≥ `CELL + 22` per far
   entrare i bersagli fuori griglia. Se ridimensioni `CELL`, ricontrolla.
+- **SVG senza `width`/`height` in attributi**: `renderGridSvg()` NON imposta
+  dimensioni in pixel sull'`<svg>`. Le dimensioni renderizzate arrivano
+  dalla CSS (`width: 100%; height: 100%` su `.grid-container svg`). Se
+  reintroduci `width`/`height` come attributi, l'SVG smette di scalare per
+  riempire il container e torna a una dimensione fissa in pixel.
+- **`.game-main` è `display: contents`**: il wrapper non genera una box,
+  i suoi figli si posizionano direttamente nella grid di `.game-screen`.
+  Non aggiungere padding, background o border a `.game-main` — non
+  verrebbero renderizzati. Se ti serve un contenitore visibile, aggiungi
+  una nuova classe wrapper e riadatta le grid areas.
+- **iOS Safari e `100vh`**: `#app` usa `height: 100dvh` con fallback
+  `100vh`. Il `dvh` (dynamic viewport height) si adatta quando la URL bar
+  di Safari compare/scompare, evitando che l'ultima parte della pagina
+  esca dalla viewport visibile. Se rimuovi il `dvh` su iPad ricompare la
+  fascia bianca in fondo alla schermata di configurazione.
+- **Rubber-band scroll su iOS**: `.config-screen` ha
+  `overscroll-behavior: contain` per non far partire lo scroll rimbalzante
+  della pagina intera quando l'utente arriva al bordo dello scroll interno.
+  Senza questo, iOS mostra una fascia bianca sotto il contenuto durante
+  il bounce.
+- **Safe-area su iPhone/iPad senza tasto Home**: `.config-screen` usa
+  `padding-bottom: max(20px, env(safe-area-inset-bottom))` per non nascondere
+  il bottone GIOCA sotto il home indicator. Applica la stessa tecnica se
+  aggiungi altre schermate scrollabili.
+- **`render()` resetta lo scroll**: siccome ricrea `.config-screen` da
+  zero ad ogni cambio di stato, `render()` salva `scrollTop` del vecchio
+  nodo e lo riapplica al nuovo. Se aggiungi altre schermate scrollabili
+  (es. una schermata istruzioni), aggiungi il selettore corrispondente
+  nel salvataggio dello scroll.
 - **Emoji nei `<text>` SVG**: `text-anchor: middle` + `dominant-baseline: central`
   centra bene su Chrome/Edge/Firefox. Su Safari il baseline è un po' spostato,
   è accettabile.
@@ -442,6 +508,15 @@ Utile per capire il "perché" delle scelte se ti chiedono modifiche:
    tempo scaduto → turno passa e mossa cancellata.
 4. **v4**: penalità e secondi timer resi **configurabili** dalla schermata
    iniziale (`penaltyEnabled` on/off, `penaltySeconds` 5-60 con stepper).
+5. **v5**: **UI responsive e griglia più grande**. L'`<svg>` della griglia
+   non ha più `width`/`height` in pixel: scala per riempire il container
+   via CSS (`preserveAspectRatio` conserva l'aspect ratio). `.game-screen`
+   riscritto con `grid-template-areas` + `display: contents` su
+   `.game-main`, così i pannelli si riordinano per breakpoint senza
+   modifiche all'HTML. Nuovi layout: 2 colonne su desktop/LIM (≥900px)
+   con dado sopra e giocatori sotto nella colonna destra; layout compatto
+   orizzontale del dado su phone portrait (≤599px). Font di header/banner
+   con `clamp()` per scaling fluido.
 
 Ogni iterazione ha mantenuto il principio *"la logica di gioco è pura, il
 rendering è dichiarativo e ricostruttivo"* — eccezione: durante l'animazione

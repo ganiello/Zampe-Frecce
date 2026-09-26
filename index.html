@@ -10,7 +10,11 @@
   html, body {
     height: 100%;
     font-family: 'Comic Sans MS', 'Trebuchet MS', system-ui, sans-serif;
+    /* La gradient sta anche su html: su iOS Safari body può essere più
+       corto della viewport (URL bar / safe-area) e senza questa fallback
+       comparirebbe una fascia bianca in fondo. */
     background: linear-gradient(180deg, #fff9e6 0%, #ffe4b5 100%);
+    background-attachment: fixed;
     color: #2c3e50;
     text-transform: uppercase;
     overflow: hidden;
@@ -18,7 +22,11 @@
     -webkit-user-select: none;
   }
   #app {
+    /* 100dvh = dynamic viewport height: su iOS Safari si adatta quando la
+       URL bar appare/scompare, evitando il salto e la fascia bianca in fondo.
+       100vh resta come fallback per browser che non supportano dvh. */
     height: 100vh;
+    height: 100dvh;
     width: 100vw;
     display: flex;
     flex-direction: column;
@@ -57,7 +65,13 @@
   .config-screen {
     height: 100%;
     overflow-y: auto;
+    /* Evita che lo scroll interno faccia partire il rubber-band della pagina
+       intera su iOS, che causa la fascia bianca in fondo. */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     padding: 20px;
+    /* Rispetta l'area del home indicator su iPad/iPhone senza tasto Home. */
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1055,10 +1069,22 @@ function showToast(text, duration = 1800) {
 /* ---------------------- RENDER PRINCIPALE ---------------------- */
 
 function render() {
+  // Preserva la posizione di scroll della schermata di configurazione:
+  // ogni click sugli stepper chiama render() che distrugge e ricrea
+  // .config-screen, quindi senza questo lo scrollTop tornerebbe a 0 e
+  // l'utente dovrebbe riscorrere in basso ad ogni click.
+  const oldConfig = app.querySelector('.config-screen');
+  const savedScroll = oldConfig ? oldConfig.scrollTop : null;
+
   app.innerHTML = '';
   if (State.screen === 'config') app.appendChild(renderConfig());
   else if (State.screen === 'game') app.appendChild(renderGame());
   else if (State.screen === 'victory') app.appendChild(renderVictory());
+
+  if (savedScroll != null && State.screen === 'config') {
+    const newConfig = app.querySelector('.config-screen');
+    if (newConfig) newConfig.scrollTop = savedScroll;
+  }
 }
 
 /* ---------------------- SCHERMATA CONFIG ---------------------- */
