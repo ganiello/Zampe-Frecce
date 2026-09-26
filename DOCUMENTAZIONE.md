@@ -203,10 +203,16 @@ pannelli con sole media query, senza toccare la struttura HTML in
 - **`min-width: 900px`** (desktop/LIM): due colonne. Griglia a sinistra
   che span-a due righe; a destra il pannello dado sopra e il pannello
   giocatori sotto (che riempie il resto).
-- **`max-width: 599px`** (phone portrait): pannello dado in `flex-wrap`
-  orizzontale (dado + freccia in linea, bottone e legenda a larghezza
-  piena), etichette "FACCIA N" nascoste per compattezza, giocatori
-  limitati a 20vh.
+- **`max-width: 899px`** (layout impilato: tablet portrait + phone):
+  il pannello dado diventa `flex-wrap` orizzontale — dado (70px) +
+  freccia + bottone LANCIA su una riga, legenda centrata sotto. Riduce
+  l'altezza del pannello dado da ~380px a ~140-160px, così la griglia
+  guadagna spazio verticale.
+- **`max-height: 500px and max-width: 899px`** (landscape phone / tablet
+  basso): dado 54px, padding ridotti, giocatori a 25vh.
+- **`max-width: 599px`** (phone portrait): dado 60px, bottone LANCIA su
+  riga propria (dado+freccia+bottone insieme sforerebbero 375-500px di
+  larghezza), etichette "FACCIA N" nascoste, giocatori a 20vh.
 
 ---
 
@@ -517,6 +523,20 @@ Utile per capire il "perché" delle scelte se ti chiedono modifiche:
    con dado sopra e giocatori sotto nella colonna destra; layout compatto
    orizzontale del dado su phone portrait (≤599px). Font di header/banner
    con `clamp()` per scaling fluido.
+6. **v5.1**: **fix iPad**. `#app` con `100dvh` (fallback `100vh`) per
+   adattarsi alla URL bar di Safari iOS ed eliminare la fascia bianca in
+   fondo; `background-attachment: fixed` sulla gradient di `body`;
+   `overscroll-behavior: contain` su `.config-screen` per bloccare il
+   rubber-band; `padding-bottom: max(20px, env(safe-area-inset-bottom))`
+   per il home indicator. `render()` salva e ripristina `scrollTop` di
+   `.config-screen` così i click sugli stepper non fanno risalire la
+   pagina.
+7. **v5.2**: **layout verticale bilanciato**. Il breakpoint del pannello
+   dado compatto è stato allargato da ≤599px a ≤899px, così anche il
+   tablet portrait usa il layout orizzontale (dado + freccia + bottone
+   in linea, legenda sotto) invece dello stack verticale. Su iPad
+   portrait 768×1024 il pannello dado passa da ~380px a ~150px verticali,
+   facendo guadagnare ~230px alla griglia.
 
 Ogni iterazione ha mantenuto il principio *"la logica di gioco è pura, il
 rendering è dichiarativo e ricostruttivo"* — eccezione: durante l'animazione
