@@ -331,33 +331,59 @@
     .players-panel { max-height: none; }
   }
 
-  /* --- Landscape phone / tablet basso: banner + header più compatti. --- */
-  @media (max-height: 500px) and (max-width: 899px) {
-    .game-screen { padding: 4px; gap: 4px; }
-    .players-panel { max-height: 30vh; }
-  }
-
-  /* --- Molto stretto (phone portrait): pannello dado orizzontale
-       per non rubare troppo spazio verticale alla griglia. --- */
-  @media (max-width: 599px) {
-    .game-screen { padding: 4px; gap: 4px; }
-    .players-panel { max-height: 20vh; }
-    .player-strip { padding: 4px 6px; gap: 6px; }
-    .player-strip .code { font-size: 0.9rem; padding: 3px 5px; }
-    .side-panel { max-height: 36vh; }
+  /* --- Layout impilato (tablet portrait + phone): dado, freccia e bottone
+       su una riga; legenda sotto. Riduce l'altezza del pannello dado da
+       ~380px a ~140-160px, liberando spazio verticale per la griglia. --- */
+  @media (max-width: 899px) {
+    .side-panel { max-height: none; }
     .dice-panel {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: center;
-      gap: 4px 10px;
-      padding: 6px;
+      gap: 6px 14px;
+      padding: 8px;
     }
-    .dice-panel .dice-face { width: 60px; height: 60px; margin: 0; }
+    .dice-panel .dice-face { width: 70px; height: 70px; margin: 0; }
+    .dice-panel .dice-arrow {
+      font-size: 2.2rem;
+      margin: 0;
+      min-height: 0;
+      display: inline-block;
+    }
+    .dice-panel #roll-btn { margin: 0; }
+    /* La legenda va sempre a capo (basis 100%) per stare centrata sotto. */
+    .dice-panel .legend {
+      flex-basis: 100%;
+      max-width: 240px;
+      margin: 4px auto 0;
+    }
+    /* Anche eventuali overlay (predict + move-hint) vanno a capo. */
+    .predict-overlay, .move-hint { flex-basis: 100%; margin: 4px 0 0; }
+  }
+
+  /* --- Landscape phone / tablet basso: banner + header più compatti. --- */
+  @media (max-height: 500px) and (max-width: 899px) {
+    .game-screen { padding: 4px; gap: 4px; }
+    .players-panel { max-height: 25vh; }
+    .dice-panel { padding: 4px; gap: 4px 8px; }
+    .dice-panel .dice-face { width: 54px; height: 54px; }
+    .dice-panel .dice-arrow { font-size: 1.8rem; }
+    .dice-panel .legend { max-width: 200px; }
+  }
+
+  /* --- Phone portrait molto stretto: comprimi ulteriormente e manda il
+       bottone LANCIA a capo (con dado+freccia stretti insieme). --- */
+  @media (max-width: 599px) {
+    .game-screen { padding: 4px; gap: 4px; }
+    .players-panel { max-height: 20vh; }
+    .player-strip { padding: 4px 6px; gap: 6px; }
+    .player-strip .code { font-size: 0.9rem; padding: 3px 5px; }
+    .dice-panel .dice-face { width: 60px; height: 60px; }
     .dice-panel .dice-face .pip { width: 10px; height: 10px; }
-    .dice-panel .dice-arrow { font-size: 1.8rem; margin: 0; min-height: 0; }
-    .dice-panel #roll-btn { flex-basis: 100%; margin-top: 4px; font-size: 1.2rem; }
-    .dice-panel .legend { flex-basis: 100%; max-width: 190px; margin: 4px auto 0; }
+    .dice-panel .dice-arrow { font-size: 1.8rem; }
+    .dice-panel #roll-btn { flex-basis: 100%; font-size: 1.2rem; }
+    .dice-panel .legend { max-width: 190px; }
     .legend .cell .num { display: none; } /* nascondi "FACCIA N" per compattezza */
   }
   .panel-card {
