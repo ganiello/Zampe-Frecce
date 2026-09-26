@@ -205,21 +205,39 @@
   .toggle input { transform: scale(1.6); cursor: pointer; }
 
   /* ============ SCHERMATA GIOCO ============ */
+  /* Mobile-first: tutto impilato in colonna. La griglia si prende 1fr,
+     il pannello giocatori è limitato in altezza e diventa scrollabile. */
   .game-screen {
     height: 100%;
     display: grid;
-    grid-template-rows: auto auto 1fr auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr auto auto;
+    grid-template-areas:
+      "header"
+      "banner"
+      "grid"
+      "side"
+      "players";
     gap: 6px;
     padding: 6px;
     overflow: hidden;
   }
+  .game-main { display: contents; }
+  .game-header    { grid-area: header; }
+  .turn-banner    { grid-area: banner; }
+  .grid-container { grid-area: grid; min-height: 0; min-width: 0; }
+  .side-panel     { grid-area: side; }
+  .players-panel  { grid-area: players; max-height: 22vh; overflow-y: auto; }
+
   .game-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 4px 10px;
+    flex-wrap: wrap;
+    gap: 6px;
   }
-  .game-header h1 { font-size: 1.4rem; color: #d84315; }
+  .game-header h1 { font-size: clamp(1.1rem, 2.4vw, 1.4rem); color: #d84315; }
   .game-header .actions { display: flex; gap: 6px; }
   .turn-banner {
     background: #fff;
@@ -236,7 +254,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 1.3rem;
+    font-size: clamp(1rem, 2.4vw, 1.3rem);
     font-weight: bold;
   }
   .turn-banner .badge {
@@ -253,33 +271,25 @@
     0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 213, 79, 0.9); }
     50%      { transform: scale(1.12); box-shadow: 0 0 0 12px rgba(255, 213, 79, 0); }
   }
-  .turn-banner .info { font-size: 1.1rem; }
+  .turn-banner .info { font-size: clamp(0.9rem, 2vw, 1.1rem); }
 
-  .game-main {
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: 8px;
-    overflow: hidden;
-    min-height: 0;
-  }
-  @media (max-width: 800px) {
-    .game-main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
-    .side-panel { max-height: 260px; }
-  }
   .grid-container {
     background: #fff;
     border: 4px solid #2c3e50;
     border-radius: 14px;
-    padding: 8px;
-    overflow: auto;
+    padding: 4px;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 0;
+    min-width: 0;
   }
+  /* La griglia SVG riempie tutto il suo contenitore mantenendo l'aspect
+     ratio (preserveAspectRatio="xMidYMid meet" nell'SVG). */
   .grid-container svg {
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     display: block;
   }
   .side-panel {
@@ -287,6 +297,54 @@
     flex-direction: column;
     gap: 8px;
     overflow: hidden;
+    min-height: 0;
+  }
+
+  /* --- Desktop / LIM wide: 2 colonne. A destra, dado sopra + giocatori sotto.
+       La griglia occupa entrambe le righe della colonna sinistra. --- */
+  @media (min-width: 900px) {
+    .game-screen {
+      grid-template-columns: minmax(0, 1fr) clamp(260px, 26vw, 340px);
+      grid-template-rows: auto auto auto 1fr;
+      grid-template-areas:
+        "header  header"
+        "banner  banner"
+        "grid    side"
+        "grid    players";
+      gap: 8px;
+      padding: 8px;
+    }
+    .players-panel { max-height: none; }
+  }
+
+  /* --- Landscape phone / tablet basso: banner + header più compatti. --- */
+  @media (max-height: 500px) and (max-width: 899px) {
+    .game-screen { padding: 4px; gap: 4px; }
+    .players-panel { max-height: 30vh; }
+  }
+
+  /* --- Molto stretto (phone portrait): pannello dado orizzontale
+       per non rubare troppo spazio verticale alla griglia. --- */
+  @media (max-width: 599px) {
+    .game-screen { padding: 4px; gap: 4px; }
+    .players-panel { max-height: 20vh; }
+    .player-strip { padding: 4px 6px; gap: 6px; }
+    .player-strip .code { font-size: 0.9rem; padding: 3px 5px; }
+    .side-panel { max-height: 36vh; }
+    .dice-panel {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 4px 10px;
+      padding: 6px;
+    }
+    .dice-panel .dice-face { width: 60px; height: 60px; margin: 0; }
+    .dice-panel .dice-face .pip { width: 10px; height: 10px; }
+    .dice-panel .dice-arrow { font-size: 1.8rem; margin: 0; min-height: 0; }
+    .dice-panel #roll-btn { flex-basis: 100%; margin-top: 4px; font-size: 1.2rem; }
+    .dice-panel .legend { flex-basis: 100%; max-width: 190px; margin: 4px auto 0; }
+    .legend .cell .num { display: none; } /* nascondi "FACCIA N" per compattezza */
   }
   .panel-card {
     background: #fff;
@@ -1432,10 +1490,10 @@ function renderGridSvg() {
   const w = cols * CELL + MARGIN * 2;
   const h = rows * CELL + MARGIN * 2;
 
+  // Nessun attributo width/height in pixel: la CSS (.grid-container svg)
+  // impone width/height 100% e preserveAspectRatio mantiene l'aspect ratio.
   const svg = el('svg', {
     viewBox: `0 0 ${w} ${h}`,
-    width: w,
-    height: h,
     preserveAspectRatio: 'xMidYMid meet'
   });
 
