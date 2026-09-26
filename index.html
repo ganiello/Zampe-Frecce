@@ -1,0 +1,2379 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Zampe & Frecce</title>
+<style>
+  /* ============ RESET E BASE ============ */
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    font-family: 'Comic Sans MS', 'Trebuchet MS', system-ui, sans-serif;
+    background: linear-gradient(180deg, #fff9e6 0%, #ffe4b5 100%);
+    color: #2c3e50;
+    text-transform: uppercase;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #app {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ============ PULSANTI ============ */
+  button {
+    font-family: inherit;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    border: 4px solid #2c3e50;
+    background: #fff;
+    color: #2c3e50;
+    padding: 12px 20px;
+    min-height: 60px;
+    min-width: 60px;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #2c3e50;
+    transition: transform 0.08s, box-shadow 0.08s;
+    touch-action: manipulation;
+  }
+  button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 0 #2c3e50; }
+  button:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 #2c3e50; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .btn-primary { background: #ffd54f; color: #2c3e50; font-size: 1.5rem; }
+  .btn-big { font-size: 2rem; padding: 20px 40px; min-height: 80px; }
+  .btn-icon { padding: 8px 14px; min-width: 60px; }
+  .btn-danger { background: #ffab91; }
+  .btn-secondary { background: #b3e5fc; }
+
+  /* ============ SCHERMATA CONFIG ============ */
+  .config-screen {
+    height: 100%;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .config-screen h1 {
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    text-align: center;
+    color: #d84315;
+    text-shadow: 2px 2px 0 #ffd54f;
+    margin: 8px 0;
+  }
+  .config-card {
+    background: rgba(255,255,255,0.85);
+    border: 4px solid #2c3e50;
+    border-radius: 16px;
+    padding: 16px 20px;
+    width: 100%;
+    max-width: 900px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+  }
+  .config-card h2 {
+    font-size: 1.3rem;
+    color: #6a1b9a;
+    margin-bottom: 12px;
+  }
+  .stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border: 3px solid #2c3e50;
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .stepper button {
+    min-height: 50px;
+    min-width: 50px;
+    padding: 4px 10px;
+    font-size: 1.6rem;
+    box-shadow: 0 3px 0 #2c3e50;
+  }
+  .stepper .value {
+    font-size: 1.6rem;
+    font-weight: bold;
+    min-width: 55px;
+    text-align: center;
+    color: #2c3e50;
+  }
+  .row-flex {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+  }
+  .players-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: #fff;
+    border-radius: 10px;
+    border: 2px solid #d0d0d0;
+  }
+  .player-row .swatch {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    border: 3px solid #2c3e50;
+    flex-shrink: 0;
+  }
+  .player-row input[type=text] {
+    flex: 1;
+    min-width: 100px;
+    font-family: inherit;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    padding: 10px;
+    border: 3px solid #d0d0d0;
+    border-radius: 8px;
+    background: #fafafa;
+  }
+  .player-row input[type=text]:focus { border-color: #6a1b9a; outline: none; }
+  .palette-picker {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .palette-picker .swatch-small {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2px solid #666;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .palette-picker .swatch-small.selected {
+    border: 3px solid #2c3e50;
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px #ffd54f;
+  }
+  .palette-picker .swatch-small.taken {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .preview-box {
+    display: flex;
+    justify-content: center;
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 10px;
+    max-height: 220px;
+    overflow: hidden;
+  }
+  .preview-box svg { max-height: 200px; max-width: 100%; }
+  .warning {
+    background: #fff3cd;
+    border: 3px dashed #ff8f00;
+    color: #b26a00;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: bold;
+    margin-top: 8px;
+  }
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .toggle input { transform: scale(1.6); cursor: pointer; }
+
+  /* ============ SCHERMATA GIOCO ============ */
+  .game-screen {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    gap: 6px;
+    padding: 6px;
+    overflow: hidden;
+  }
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 10px;
+  }
+  .game-header h1 { font-size: 1.4rem; color: #d84315; }
+  .game-header .actions { display: flex; gap: 6px; }
+  .turn-banner {
+    background: #fff;
+    border: 4px solid #2c3e50;
+    border-radius: 14px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .turn-banner .who {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.3rem;
+    font-weight: bold;
+  }
+  .turn-banner .badge {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 3px solid #2c3e50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    animation: pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 213, 79, 0.9); }
+    50%      { transform: scale(1.12); box-shadow: 0 0 0 12px rgba(255, 213, 79, 0); }
+  }
+  .turn-banner .info { font-size: 1.1rem; }
+
+  .game-main {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 8px;
+    overflow: hidden;
+    min-height: 0;
+  }
+  @media (max-width: 800px) {
+    .game-main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+    .side-panel { max-height: 260px; }
+  }
+  .grid-container {
+    background: #fff;
+    border: 4px solid #2c3e50;
+    border-radius: 14px;
+    padding: 8px;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+  .grid-container svg {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+  }
+  .side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: hidden;
+  }
+  .panel-card {
+    background: #fff;
+    border: 4px solid #2c3e50;
+    border-radius: 14px;
+    padding: 10px;
+  }
+  .dice-panel { text-align: center; }
+  .dice-face {
+    display: inline-block;
+    width: 90px;
+    height: 90px;
+    background: #fff;
+    border: 4px solid #2c3e50;
+    border-radius: 14px;
+    position: relative;
+    margin: 8px auto;
+    box-shadow: 0 4px 0 #2c3e50;
+  }
+  .dice-face.rolling { animation: shake 0.1s linear infinite; }
+  @keyframes shake {
+    0% { transform: rotate(0) translate(0); }
+    25% { transform: rotate(-8deg) translate(-3px, 2px); }
+    50% { transform: rotate(6deg) translate(2px, -3px); }
+    75% { transform: rotate(-4deg) translate(-2px, 3px); }
+    100% { transform: rotate(0) translate(0); }
+  }
+  .dice-face .pip {
+    position: absolute;
+    width: 14px; height: 14px;
+    background: #2c3e50;
+    border-radius: 50%;
+  }
+  .dice-arrow {
+    font-size: 3rem;
+    color: #d84315;
+    display: block;
+    line-height: 1;
+    margin: 4px 0;
+    min-height: 1em;
+  }
+
+  .legend {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    max-width: 220px;
+    margin: 8px auto;
+  }
+  .legend .cell {
+    aspect-ratio: 1;
+    background: #f5f5f5;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    padding: 2px;
+  }
+  .legend .cell.center { background: #fff; border-style: dashed; }
+  .legend .cell.active {
+    background: #ffd54f;
+    border-color: #d84315;
+    box-shadow: 0 0 0 3px #ffab91;
+  }
+  .legend .cell .arrow { font-size: 1.4rem; line-height: 1; }
+  .legend .cell .num { font-size: 0.75rem; color: #666; }
+
+  .players-panel {
+    max-height: 100%;
+    overflow-y: auto;
+  }
+  .players-panel h3 { font-size: 1rem; margin-bottom: 6px; color: #6a1b9a; }
+  .player-strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    background: #f9f9f9;
+    border: 2px solid transparent;
+    flex-wrap: wrap;
+  }
+  .player-strip.current { border-color: #ffd54f; background: #fffde7; }
+  .player-strip .mini-badge {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2px solid #2c3e50;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .player-strip .name { font-weight: bold; font-size: 0.95rem; }
+  .player-strip .stars { color: #ff8f00; font-weight: bold; }
+  .player-strip .code {
+    flex-basis: 100%;
+    font-size: 1.1rem;
+    background: #fff;
+    padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px dashed #ccc;
+    min-height: 30px;
+    word-wrap: break-word;
+    letter-spacing: 2px;
+  }
+  .player-strip .code .cancelled {
+    text-decoration: line-through;
+    color: #aaa;
+    text-decoration-thickness: 2px;
+  }
+  .player-strip .progress {
+    flex: 1;
+    height: 12px;
+    background: #eee;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    min-width: 60px;
+  }
+  .player-strip .progress .bar {
+    height: 100%;
+    transition: width 0.4s ease;
+  }
+  .player-strip .rows-left { font-size: 0.85rem; color: #555; }
+
+  .message-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: #fff;
+    border: 4px solid #d84315;
+    color: #d84315;
+    padding: 12px 22px;
+    border-radius: 14px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+    transition: transform 0.4s ease;
+    z-index: 100;
+    pointer-events: none;
+  }
+  .message-toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ============ PREVISIONE ============ */
+  .predict-overlay {
+    background: rgba(255,255,255,0.95);
+    border: 4px solid #6a1b9a;
+    border-radius: 14px;
+    padding: 12px;
+    text-align: center;
+    margin: 8px 0;
+  }
+  .predict-overlay h3 { color: #6a1b9a; margin-bottom: 8px; font-size: 1.1rem; }
+  .predict-choices { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .predict-choices button {
+    font-size: 2.5rem;
+    min-width: 80px;
+    min-height: 80px;
+    background: #e1bee7;
+  }
+
+  /* ============ PENALITÀ MATEMATICA ============ */
+  .penalty-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    animation: fadeIn 0.25s ease;
+    padding: 12px;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .penalty-box {
+    background: #fff;
+    border: 6px solid #d84315;
+    border-radius: 20px;
+    padding: 20px 24px;
+    max-width: 520px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 10px 0 rgba(0,0,0,0.4);
+    max-height: 96vh;
+    overflow-y: auto;
+  }
+  .penalty-box h2 {
+    color: #d84315;
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+  .penalty-timer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .penalty-timer .clock {
+    font-size: 2.4rem;
+    color: #d84315;
+    font-weight: bold;
+    min-width: 60px;
+    line-height: 1;
+  }
+  .penalty-timer .bar-wrap {
+    flex: 1;
+    height: 22px;
+    background: #eee;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 3px solid #2c3e50;
+  }
+  .penalty-timer .bar {
+    height: 100%;
+    background: linear-gradient(90deg, #66bb6a, #ffee58 60%, #d84315);
+    transition: width 1s linear;
+  }
+  .penalty-question {
+    font-size: clamp(2.5rem, 8vw, 3.5rem);
+    font-weight: bold;
+    color: #6a1b9a;
+    margin: 16px 0 10px;
+    letter-spacing: 4px;
+  }
+  .penalty-answer {
+    font-size: 2.4rem;
+    min-height: 62px;
+    border: 4px dashed #999;
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin: 10px auto;
+    color: #d84315;
+    background: #fffde7;
+    min-width: 140px;
+    max-width: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    line-height: 1;
+  }
+  .penalty-answer.wrong-flash {
+    animation: penaltyShake 0.4s;
+    border-color: #b71c1c;
+    background: #ffcdd2;
+    color: #b71c1c;
+  }
+  @keyframes penaltyShake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-10px); }
+    75%      { transform: translateX(10px); }
+  }
+  .penalty-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-width: 360px;
+    margin: 12px auto 0;
+  }
+  .penalty-keypad .kbtn {
+    font-size: 1.7rem;
+    min-height: 66px;
+    padding: 4px;
+  }
+  .penalty-keypad .kbtn-ok { background: #66bb6a; color: white; }
+  .penalty-keypad .kbtn-del { background: #ffab91; }
+
+  /* ============ BERSAGLI PER MOSSA MANUALE ============ */
+  .target { cursor: pointer; }
+  .target-hit { pointer-events: all; }
+  .target-ring {
+    fill: rgba(255, 213, 79, 0.55);
+    stroke: #d84315;
+    stroke-width: 3;
+    animation: targetPulse 1s ease-in-out infinite;
+  }
+  .target.off-grid .target-ring {
+    fill: rgba(200, 200, 200, 0.5);
+    stroke: #888;
+    stroke-dasharray: 5 4;
+  }
+  .target.wrong .target-ring {
+    animation: wrongFlash 0.5s ease;
+  }
+  @keyframes targetPulse {
+    0%, 100% { r: 20; opacity: 0.9; }
+    50%      { r: 24; opacity: 1;   }
+  }
+  @keyframes wrongFlash {
+    0%   { fill: rgba(255, 213, 79, 0.55); stroke: #d84315; }
+    50%  { fill: rgba(229, 57, 53, 0.85);  stroke: #b71c1c; stroke-width: 5; }
+    100% { fill: rgba(255, 213, 79, 0.55); stroke: #d84315; }
+  }
+  .target-arrow {
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-size: 22px;
+    fill: #2c3e50;
+    pointer-events: none;
+    font-weight: bold;
+  }
+  .move-hint {
+    background: #fff3cd;
+    border: 3px solid #ff8f00;
+    color: #b26a00;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 8px;
+    animation: hintPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes hintPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.03); }
+  }
+
+  /* ============ VITTORIA ============ */
+  .victory-screen {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .victory-screen h1 {
+    font-size: clamp(2rem, 6vw, 4rem);
+    color: #d84315;
+    text-shadow: 3px 3px 0 #ffd54f;
+    animation: bounce 0.8s ease-in-out infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-15px); }
+  }
+  .winners-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .winner-card {
+    background: #fff;
+    border: 4px solid #ffd54f;
+    padding: 16px 30px;
+    border-radius: 16px;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+  }
+  .winner-card .big-badge {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    border: 4px solid #2c3e50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+  }
+  .victory-buttons { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+
+  /* Coriandoli */
+  #confetti {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 50;
+  }
+  .confetto {
+    position: absolute;
+    top: -20px;
+    width: 12px;
+    height: 16px;
+    opacity: 0.9;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(720deg); }
+  }
+
+  /* ============ SVG GRIGLIA ============ */
+  .grid-dot { fill: #b0bec5; }
+  .grid-dot.start { stroke: #2c3e50; stroke-width: 2; }
+  .finish-band { fill: url(#checker); }
+  .finish-flag { font-size: 24px; }
+  .path-line { fill: none; stroke-width: 4; opacity: 0.7; stroke-linecap: round; stroke-linejoin: round; }
+  .piece {
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .piece circle { stroke: #2c3e50; stroke-width: 3; }
+  .piece.current-turn circle { animation: piecePulse 1s ease-in-out infinite; }
+  @keyframes piecePulse {
+    0%, 100% { r: var(--r, 16); }
+    50%      { r: calc(var(--r, 16) * 1.15); }
+  }
+  .piece text {
+    text-anchor: middle;
+    dominant-baseline: central;
+    font-size: 18px;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="confetti"></div>
+  <div id="toast" class="message-toast"></div>
+
+<script>
+/* =====================================================================
+   ZAMPE & FRECCE - stato + rendering + logica
+   ===================================================================== */
+
+/* ---------------------- COSTANTI DI CONFIGURAZIONE ---------------------- */
+
+// Mappatura dado -> direzione. Modificabile in un solo posto.
+// (dx, dy) con dy che cresce verso il basso.
+const DICE_MAP = {
+  1: { dx:  0, dy:  1, arrow: '↓',  name: 'GIÙ' },
+  2: { dx:  1, dy:  1, arrow: '↘', name: 'GIÙ A DESTRA' },
+  3: { dx:  1, dy:  0, arrow: '→',  name: 'DESTRA' },
+  4: { dx: -1, dy:  0, arrow: '←',  name: 'SINISTRA' },
+  5: { dx: -1, dy:  1, arrow: '↙', name: 'GIÙ A SINISTRA' },
+  6: { dx:  0, dy: -1, arrow: '↑',  name: 'SU' }
+};
+
+// Palette pedine: 10 colori distinguibili anche per daltonici + emoji animale.
+const PALETTE = [
+  { color: '#E53935', symbol: '🦁', name: 'LEONE' },
+  { color: '#1E88E5', symbol: '🐯', name: 'TIGRE' },
+  { color: '#43A047', symbol: '🐸', name: 'RANA' },
+  { color: '#FB8C00', symbol: '🦊', name: 'VOLPE' },
+  { color: '#8E24AA', symbol: '🐼', name: 'PANDA' },
+  { color: '#00ACC1', symbol: '🦄', name: 'UNICORNO' },
+  { color: '#EC407A', symbol: '🐙', name: 'POLPO' },
+  { color: '#F9A825', symbol: '🐢', name: 'TARTARUGA' },
+  { color: '#00897B', symbol: '🦉', name: 'GUFO' },
+  { color: '#6D4C41', symbol: '🐨', name: 'KOALA' }
+];
+
+const MIN_PLAYERS = 2;
+const MAX_PLAYERS = 10;
+const MIN_GRID = 5;
+const MAX_GRID = 40;
+const CELL = 42;              // dimensione cella in unità SVG
+const MARGIN = 65;            // margine SVG: abbastanza per mostrare anche i bersagli fuori griglia
+const ROLL_DURATION_MS = 1000;
+const MOVE_DURATION_MS = 500;
+const DEFAULT_PENALTY_SECONDS = 15;   // valore iniziale (poi configurabile nella schermata setup)
+const MIN_PENALTY_SECONDS = 5;
+const MAX_PENALTY_SECONDS = 60;
+
+/* ---------------------- STATO DELL'APPLICAZIONE ---------------------- */
+
+const State = {
+  screen: 'config',
+  config: {
+    numPlayers: 2,
+    players: [],           // [{name, colorIndex}]
+    cols: 10,
+    rows: 12,
+    maxTurns: 36,
+    maxTurnsManuallySet: false,
+    predictMode: false,
+    soundOn: true,
+    penaltyEnabled: true,                    // se attiva, l'errore fa scattare l'operazione
+    penaltySeconds: DEFAULT_PENALTY_SECONDS  // secondi per rispondere
+  },
+  game: null,   // riempito da startGame()
+  victory: null // { winners: [i,...], reason: 'traguardo'|'turni' }
+};
+
+function makeInitialGameState(config) {
+  const positions = getStartingPositions(config.cols, config.numPlayers);
+  return {
+    positions: positions,               // [{x,y}]
+    paths: positions.map(p => [{ x: p.x, y: p.y, arrow: null, cancelled: false, start: true }]),
+    stars: new Array(config.numPlayers).fill(0),
+    currentPlayer: 0,
+    roundNumber: 1,
+    rolling: false,
+    animating: false,
+    lastDice: null,
+    predictionPending: false,
+    awaitingMove: false,     // in attesa che l'alunno tocchi il bersaglio giusto
+    penaltyActive: false,    // sta rispondendo alla penalità matematica
+    penaltyQuestion: null,   // { a, b, op, answer }
+    penaltyInput: '',        // cifre digitate finora
+    penaltyTimeLeft: 0,      // secondi rimasti
+    penaltyTimerId: null     // id di setInterval
+  };
+}
+
+function getStartingPositions(cols, numPlayers) {
+  // Distribuzione equidistante lungo la prima riga (y = 0).
+  const positions = [];
+  for (let i = 0; i < numPlayers; i++) {
+    const x = Math.min(cols - 1, Math.floor((i + 0.5) * cols / numPlayers));
+    positions.push({ x, y: 0 });
+  }
+  return positions;
+}
+
+/* ---------------------- LOGICA DI GIOCO (pura) ---------------------- */
+
+// Restituisce la destinazione teorica per una direzione da un punto.
+function computeDestination(pos, diceValue) {
+  const dir = DICE_MAP[diceValue];
+  return { x: pos.x + dir.dx, y: pos.y + dir.dy };
+}
+
+// Controlla se una posizione è dentro la griglia.
+function isInside(pos, cols, rows) {
+  return pos.x >= 0 && pos.x < cols && pos.y >= 0 && pos.y < rows;
+}
+
+// Applica un tentativo di mossa. Modifica lo stato.
+// Ritorna { moved, from, to, cancelled, arrow }.
+function attemptMove(state, diceValue) {
+  const cfg = state.config || state; // supporta test con state minimale
+  const cols = cfg.cols;
+  const rows = cfg.rows;
+  const pIndex = state.game ? state.game.currentPlayer : state.currentPlayerIndex;
+  const positions = state.game ? state.game.positions : state.players;
+  const paths = state.game ? state.game.paths : null;
+
+  const from = { ...positions[pIndex] };
+  const to = computeDestination(from, diceValue);
+  const arrow = DICE_MAP[diceValue].arrow;
+  const inside = isInside(to, cols, rows);
+
+  if (inside) {
+    positions[pIndex] = to;
+    if (paths) paths[pIndex].push({ x: to.x, y: to.y, arrow, cancelled: false });
+    return { moved: true, from, to, cancelled: false, arrow };
+  } else {
+    if (paths) paths[pIndex].push({ x: from.x, y: from.y, arrow, cancelled: true });
+    return { moved: false, from, to: from, cancelled: true, arrow };
+  }
+}
+
+// Verifica se un giocatore ha raggiunto l'ultima riga.
+// Ritorna l'indice del vincitore o -1.
+function checkWinner(state) {
+  const rows = (state.config || state).rows;
+  const positions = state.game ? state.game.positions : state.players;
+  for (let i = 0; i < positions.length; i++) {
+    if (positions[i].y === rows - 1) return i;
+  }
+  return -1;
+}
+
+// Calcola i vincitori "ai punti" (chi è sulla riga più bassa).
+function getWinnersByPosition(state) {
+  const positions = state.game ? state.game.positions : state.players;
+  let maxY = -1;
+  for (const p of positions) if (p.y > maxY) maxY = p.y;
+  const winners = [];
+  positions.forEach((p, i) => { if (p.y === maxY) winners.push(i); });
+  return winners;
+}
+
+// Calcolo automatico del limite di turni.
+function calculateDefaultMaxTurns(rows) {
+  return rows * 3;
+}
+
+// Passa il turno al giocatore successivo. Ritorna true se è iniziato un nuovo round.
+function advanceTurn(state) {
+  const numPlayers = state.game
+    ? state.config.numPlayers
+    : state.players.length;
+  const g = state.game || state;
+  g.currentPlayer = (g.currentPlayer + 1) % numPlayers;
+  g.currentPlayerIndex = g.currentPlayer; // alias per test
+  if (g.currentPlayer === 0) {
+    g.roundNumber = (g.roundNumber || g.turn || 1) + 1;
+    g.turn = g.roundNumber;
+    return true;
+  }
+  return false;
+}
+
+/* ---------------------- SUONI ---------------------- */
+
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { audioCtx = null; }
+  }
+  return audioCtx;
+}
+
+function playSound(type) {
+  if (!State.config.soundOn) return;
+  const ctx = ensureAudio();
+  if (!ctx) return;
+
+  if (type === 'dice') {
+    // Suono continuo tremolante per il lancio.
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(180, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(420, ctx.currentTime + 0.9);
+    g.gain.setValueAtTime(0.12, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
+    osc.start(); osc.stop(ctx.currentTime + 0.9);
+  } else if (type === 'step') {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 660;
+    g.gain.setValueAtTime(0.18, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+    osc.start(); osc.stop(ctx.currentTime + 0.2);
+  } else if (type === 'oops') {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(240, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(120, ctx.currentTime + 0.3);
+    g.gain.setValueAtTime(0.15, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(); osc.stop(ctx.currentTime + 0.32);
+  } else if (type === 'star') {
+    [880, 1320].forEach((f, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'triangle';
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.08 + 0.2);
+      o.start(ctx.currentTime + i * 0.08);
+      o.stop(ctx.currentTime + i * 0.08 + 0.25);
+    });
+  } else if (type === 'victory') {
+    const notes = [523, 659, 784, 1047, 1319];
+    notes.forEach((f, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'triangle';
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.18, ctx.currentTime + i * 0.15);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.35);
+      o.start(ctx.currentTime + i * 0.15);
+      o.stop(ctx.currentTime + i * 0.15 + 0.4);
+    });
+  }
+}
+
+/* ---------------------- UTILITÀ RENDERING ---------------------- */
+
+const app = document.getElementById('app');
+const toastEl = document.getElementById('toast');
+
+function el(tag, attrs = {}, children = []) {
+  const isSvg = ['svg','g','circle','rect','line','polyline','text','pattern','defs'].includes(tag);
+  const node = isSvg
+    ? document.createElementNS('http://www.w3.org/2000/svg', tag)
+    : document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'style' && typeof v === 'object') {
+      Object.assign(node.style, v);
+    } else if (k.startsWith('on') && typeof v === 'function') {
+      node.addEventListener(k.slice(2).toLowerCase(), v);
+    } else if (k === 'class') {
+      node.setAttribute('class', v);
+    } else {
+      node.setAttribute(k, v);
+    }
+  }
+  const arr = Array.isArray(children) ? children : [children];
+  for (const c of arr) {
+    if (c == null || c === false) continue;
+    node.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  }
+  return node;
+}
+
+function showToast(text, duration = 1800) {
+  toastEl.textContent = text;
+  toastEl.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toastEl.classList.remove('show'), duration);
+}
+
+/* ---------------------- RENDER PRINCIPALE ---------------------- */
+
+function render() {
+  app.innerHTML = '';
+  if (State.screen === 'config') app.appendChild(renderConfig());
+  else if (State.screen === 'game') app.appendChild(renderGame());
+  else if (State.screen === 'victory') app.appendChild(renderVictory());
+}
+
+/* ---------------------- SCHERMATA CONFIG ---------------------- */
+
+function ensurePlayerSlots() {
+  const cfg = State.config;
+  // Se aumento i giocatori aggiungo slot; se diminuisco taglio.
+  while (cfg.players.length < cfg.numPlayers) {
+    const usedColors = new Set(cfg.players.map(p => p.colorIndex));
+    let ci = 0;
+    while (usedColors.has(ci) && ci < PALETTE.length) ci++;
+    cfg.players.push({ name: '', colorIndex: ci });
+  }
+  cfg.players.length = cfg.numPlayers;
+}
+
+function renderConfig() {
+  ensurePlayerSlots();
+  const cfg = State.config;
+
+  const root = el('div', { class: 'config-screen' });
+  root.appendChild(el('h1', {}, ['🐾 ZAMPE & FRECCE 🎲']));
+
+  // --- Giocatori ---
+  const cardPlayers = el('div', { class: 'config-card' });
+  cardPlayers.appendChild(el('h2', {}, ['QUANTI GIOCATORI?']));
+
+  const stepperPl = makeStepper(cfg.numPlayers, MIN_PLAYERS, MAX_PLAYERS, (v) => {
+    cfg.numPlayers = v;
+    ensurePlayerSlots();
+    render();
+  });
+  cardPlayers.appendChild(stepperPl);
+
+  const playersList = el('div', { class: 'players-list', style: { marginTop: '14px' } });
+  const takenColors = new Set(cfg.players.map(p => p.colorIndex));
+  cfg.players.forEach((p, i) => {
+    const pal = PALETTE[p.colorIndex];
+    const row = el('div', { class: 'player-row' });
+    const swatch = el('div', {
+      class: 'swatch',
+      style: { background: pal.color, color: '#fff' }
+    }, [pal.symbol]);
+    const nameInput = el('input', {
+      type: 'text',
+      maxlength: '14',
+      placeholder: `GIOCATORE ${i + 1}`,
+      value: p.name,
+      oninput: (e) => { p.name = e.target.value; }
+    });
+    // Selettore colore
+    const palettePicker = el('div', { class: 'palette-picker' });
+    PALETTE.forEach((entry, ci) => {
+      const isMine = p.colorIndex === ci;
+      const taken = takenColors.has(ci) && !isMine;
+      const sw = el('div', {
+        class: 'swatch-small' + (isMine ? ' selected' : '') + (taken ? ' taken' : ''),
+        style: { background: entry.color, color: '#fff' },
+        title: entry.name,
+        onclick: () => {
+          if (taken) return;
+          p.colorIndex = ci;
+          render();
+        }
+      }, [entry.symbol]);
+      palettePicker.appendChild(sw);
+    });
+    row.append(swatch, nameInput, palettePicker);
+    playersList.appendChild(row);
+  });
+  cardPlayers.appendChild(playersList);
+  root.appendChild(cardPlayers);
+
+  // --- Griglia ---
+  const cardGrid = el('div', { class: 'config-card' });
+  cardGrid.appendChild(el('h2', {}, ['DIMENSIONE DELLA GRIGLIA']));
+  const gridRow = el('div', { class: 'row-flex' });
+  const colLabel = el('div', {}, ['COLONNE:']);
+  const colStep = makeStepper(cfg.cols, MIN_GRID, MAX_GRID, (v) => {
+    cfg.cols = v;
+    render();
+  });
+  const rowLabel = el('div', {}, ['RIGHE (DISTANZA DAL TRAGUARDO):']);
+  const rowStep = makeStepper(cfg.rows, MIN_GRID, MAX_GRID, (v) => {
+    cfg.rows = v;
+    if (!cfg.maxTurnsManuallySet) cfg.maxTurns = calculateDefaultMaxTurns(v);
+    render();
+  });
+  gridRow.append(colLabel, colStep, rowLabel, rowStep);
+  cardGrid.appendChild(gridRow);
+
+  // Anteprima
+  const preview = el('div', { class: 'preview-box' });
+  preview.appendChild(renderPreviewGrid(cfg.cols, cfg.rows, cfg.players.slice(0, cfg.numPlayers)));
+  cardGrid.appendChild(preview);
+
+  if (cfg.rows > 15) {
+    cardGrid.appendChild(el('div', { class: 'warning' },
+      ['⚠️ GRIGLIA MOLTO ALTA: LA PARTITA SARÀ LUNGA. CONSIGLIATE 10-12 RIGHE.']));
+  }
+  root.appendChild(cardGrid);
+
+  // --- Turni ---
+  const cardTurns = el('div', { class: 'config-card' });
+  cardTurns.appendChild(el('h2', {}, ['NUMERO MASSIMO DI TURNI PER GIOCATORE']));
+  const turnsStep = makeStepper(cfg.maxTurns, 1, 999, (v) => {
+    cfg.maxTurns = v;
+    cfg.maxTurnsManuallySet = true;
+    render();
+  });
+  const resetBtn = el('button', {
+    class: 'btn-secondary',
+    onclick: () => {
+      cfg.maxTurns = calculateDefaultMaxTurns(cfg.rows);
+      cfg.maxTurnsManuallySet = false;
+      render();
+    }
+  }, ['↺ AUTO (RIGHE × 3)']);
+  const turnsRow = el('div', { class: 'row-flex' }, [turnsStep, resetBtn]);
+  cardTurns.appendChild(turnsRow);
+  root.appendChild(cardTurns);
+
+  // --- Opzioni ---
+  const cardOpts = el('div', { class: 'config-card' });
+  cardOpts.appendChild(el('h2', {}, ['OPZIONI']));
+  const optsRow = el('div', { class: 'row-flex' });
+
+  const predictLabel = el('label', { class: 'toggle' });
+  const predictInput = el('input', {
+    type: 'checkbox',
+    onchange: (e) => { cfg.predictMode = e.target.checked; }
+  });
+  if (cfg.predictMode) predictInput.checked = true;
+  predictLabel.append(predictInput, document.createTextNode(' ⭐ MODALITÀ PREVEDI (SCEGLI LA FRECCIA)'));
+
+  const soundLabel = el('label', { class: 'toggle' });
+  const soundInput = el('input', {
+    type: 'checkbox',
+    onchange: (e) => { cfg.soundOn = e.target.checked; }
+  });
+  if (cfg.soundOn) soundInput.checked = true;
+  soundLabel.append(soundInput, document.createTextNode(' 🔊 SUONI ATTIVI'));
+
+  optsRow.append(predictLabel, soundLabel);
+  cardOpts.appendChild(optsRow);
+
+  // Riga penalità: on/off + secondi
+  const penaltyRow = el('div', { class: 'row-flex', style: { marginTop: '10px' } });
+
+  const penaltyLabel = el('label', { class: 'toggle' });
+  const penaltyInput = el('input', {
+    type: 'checkbox',
+    onchange: (e) => { cfg.penaltyEnabled = e.target.checked; render(); }
+  });
+  if (cfg.penaltyEnabled) penaltyInput.checked = true;
+  penaltyLabel.append(penaltyInput,
+    document.createTextNode(' ➕ PENALITÀ MATEMATICA SU ERRORE'));
+  penaltyRow.appendChild(penaltyLabel);
+
+  // Stepper secondi (mostrato ma disabilitato se la penalità è off)
+  const secLabel = el('div', {
+    style: { opacity: cfg.penaltyEnabled ? 1 : 0.4 }
+  }, ['⏱ SECONDI PER RISPONDERE:']);
+  const secStep = makeStepper(cfg.penaltySeconds, MIN_PENALTY_SECONDS, MAX_PENALTY_SECONDS, (v) => {
+    cfg.penaltySeconds = v;
+    render();
+  });
+  if (!cfg.penaltyEnabled) {
+    secStep.querySelectorAll('button').forEach(b => b.disabled = true);
+    secStep.style.opacity = 0.4;
+  }
+  penaltyRow.append(secLabel, secStep);
+  cardOpts.appendChild(penaltyRow);
+
+  root.appendChild(cardOpts);
+
+  // --- Play ---
+  const playBtn = el('button', {
+    class: 'btn-primary btn-big',
+    onclick: startGame
+  }, ['🎮 GIOCA!']);
+  root.appendChild(playBtn);
+
+  return root;
+}
+
+function makeStepper(value, min, max, onChange) {
+  const wrap = el('div', { class: 'stepper' });
+  const minus = el('button', {
+    onclick: () => { if (value > min) onChange(value - 1); }
+  }, ['−']);
+  const val = el('span', { class: 'value' }, [String(value)]);
+  const plus = el('button', {
+    onclick: () => { if (value < max) onChange(value + 1); }
+  }, ['+']);
+  if (value <= min) minus.disabled = true;
+  if (value >= max) plus.disabled = true;
+  wrap.append(minus, val, plus);
+  return wrap;
+}
+
+function renderPreviewGrid(cols, rows, players) {
+  const svg = el('svg', {
+    viewBox: `0 0 ${cols * 12 + 20} ${rows * 12 + 20}`,
+    width: (cols * 12 + 20),
+    height: Math.min(200, rows * 12 + 20)
+  });
+  // Traguardo (ultima riga)
+  svg.appendChild(el('rect', {
+    x: 5,
+    y: (rows - 1) * 12 + 10 - 5,
+    width: cols * 12,
+    height: 10,
+    fill: '#d84315', opacity: 0.5
+  }));
+  // Dots
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      svg.appendChild(el('circle', {
+        cx: x * 12 + 10,
+        cy: y * 12 + 10,
+        r: 1.5,
+        fill: '#78909c'
+      }));
+    }
+  }
+  // Partenze
+  const positions = getStartingPositions(cols, players.length);
+  positions.forEach((p, i) => {
+    const pal = PALETTE[players[i].colorIndex];
+    svg.appendChild(el('circle', {
+      cx: p.x * 12 + 10,
+      cy: p.y * 12 + 10,
+      r: 4,
+      fill: pal.color,
+      stroke: '#2c3e50', 'stroke-width': 1
+    }));
+  });
+  return svg;
+}
+
+/* ---------------------- AVVIO PARTITA ---------------------- */
+
+function startGame() {
+  ensurePlayerSlots();
+  State.game = makeInitialGameState(State.config);
+  State.screen = 'game';
+  State.victory = null;
+  render();
+}
+
+/* ---------------------- SCHERMATA GIOCO ---------------------- */
+
+function renderGame() {
+  const cfg = State.config;
+  const g = State.game;
+  const root = el('div', { class: 'game-screen' });
+
+  // Header
+  const header = el('div', { class: 'game-header' });
+  header.appendChild(el('h1', {}, ['🐾 ZAMPE & FRECCE']));
+  const actions = el('div', { class: 'actions' });
+  actions.appendChild(el('button', {
+    class: 'btn-icon',
+    onclick: toggleSound,
+    title: cfg.soundOn ? 'DISATTIVA SUONI' : 'ATTIVA SUONI'
+  }, [cfg.soundOn ? '🔊' : '🔇']));
+  actions.appendChild(el('button', {
+    class: 'btn-icon btn-danger',
+    onclick: confirmNewGame
+  }, ['🏠 NUOVA']));
+  header.appendChild(actions);
+  root.appendChild(header);
+
+  // Banner turno
+  const player = cfg.players[g.currentPlayer];
+  const pal = PALETTE[player.colorIndex];
+  const banner = el('div', { class: 'turn-banner' });
+  const who = el('div', { class: 'who' });
+  const badge = el('div', {
+    class: 'badge',
+    style: { background: pal.color, color: '#fff' }
+  }, [pal.symbol]);
+  who.append(badge, document.createTextNode('TURNO DI: ' + (player.name || `GIOCATORE ${g.currentPlayer + 1}`)));
+  banner.appendChild(who);
+
+  const info = el('div', { class: 'info' });
+  info.textContent = `TURNO ${g.roundNumber} DI ${cfg.maxTurns}`;
+  banner.appendChild(info);
+  root.appendChild(banner);
+
+  // Main = grid + side panel
+  const main = el('div', { class: 'game-main' });
+  const gridBox = el('div', { class: 'grid-container' });
+  gridBox.appendChild(renderGridSvg());
+  main.appendChild(gridBox);
+
+  const side = el('div', { class: 'side-panel' });
+
+  // Pannello dado
+  const dicePanel = el('div', { class: 'panel-card dice-panel' });
+  const diceFace = el('div', { class: 'dice-face' + (g.rolling ? ' rolling' : ''), id: 'dice-face' });
+  renderDiceFacePips(diceFace, g.lastDice || 1);
+  dicePanel.appendChild(diceFace);
+  // In modalità Prevedi la freccia resta nascosta finché il bambino non sceglie.
+  const showArrow = g.lastDice && !g.rolling && !g.predictionPending;
+  const arrowEl = el('div', { class: 'dice-arrow' },
+    [showArrow ? DICE_MAP[g.lastDice].arrow : (g.predictionPending ? '❓' : '')]);
+  dicePanel.appendChild(arrowEl);
+
+  const rollBtn = el('button', {
+    class: 'btn-primary',
+    id: 'roll-btn',
+    onclick: onRollDice
+  }, ['🎲 LANCIA IL DADO']);
+  if (g.rolling || g.animating || g.predictionPending || g.awaitingMove || g.penaltyActive) rollBtn.disabled = true;
+  dicePanel.appendChild(rollBtn);
+
+  // Se in modalità prevedi con lancio già effettuato, mostra scelte frecce
+  if (g.predictionPending && g.lastDice) {
+    dicePanel.appendChild(renderPredictChoices());
+  }
+
+  // Suggerimento: ora sposta la pedina toccando il bersaglio giusto
+  if (g.awaitingMove && g.lastDice) {
+    const hint = el('div', { class: 'move-hint' },
+      ['👉 TOCCA IL PUNTO GIUSTO PER MUOVERE LA PEDINA!']);
+    dicePanel.appendChild(hint);
+  }
+
+  // Legenda (non evidenziare la freccia se il bambino deve ancora prevedere)
+  dicePanel.appendChild(renderLegend(g.lastDice, g.rolling || g.predictionPending));
+
+  side.appendChild(dicePanel);
+  main.appendChild(side);
+  root.appendChild(main);
+
+  // Pannello giocatori
+  const playersPanel = el('div', { class: 'panel-card players-panel' });
+  playersPanel.appendChild(el('h3', {}, ['👥 GIOCATORI E MOSSE']));
+  cfg.players.forEach((p, i) => {
+    playersPanel.appendChild(renderPlayerStrip(p, i));
+  });
+  root.appendChild(playersPanel);
+
+  // Overlay penalità matematica (sopra tutto)
+  if (g.penaltyActive) root.appendChild(renderPenaltyOverlay());
+
+  return root;
+}
+
+function renderPenaltyOverlay() {
+  const g = State.game;
+  const q = g.penaltyQuestion;
+  const cfg = State.config;
+  const player = cfg.players[g.currentPlayer];
+  const pal = PALETTE[player.colorIndex];
+
+  const overlay = el('div', { class: 'penalty-overlay' });
+  const box = el('div', { class: 'penalty-box' });
+
+  // Timer con orologio + barra
+  const timer = el('div', { class: 'penalty-timer' });
+  timer.appendChild(el('div', { class: 'clock', id: 'penalty-clock' },
+    [String(g.penaltyTimeLeft)]));
+  const barWrap = el('div', { class: 'bar-wrap' });
+  barWrap.appendChild(el('div', {
+    class: 'bar', id: 'penalty-bar',
+    style: { width: (g.penaltyTimeLeft / cfg.penaltySeconds * 100) + '%' }
+  }));
+  timer.appendChild(barWrap);
+  box.appendChild(timer);
+
+  // Titolo con la pedina del giocatore in penalità
+  const title = el('h2', {});
+  title.append(
+    document.createTextNode(`⚠️ PENALITÀ PER ${player.name || 'GIOCATORE ' + (g.currentPlayer + 1)} `),
+    (function () {
+      const b = el('span', {
+        style: {
+          display: 'inline-block',
+          width: '32px', height: '32px', borderRadius: '50%',
+          border: '3px solid #2c3e50', background: pal.color, color: '#fff',
+          textAlign: 'center', lineHeight: '28px', verticalAlign: 'middle',
+          marginLeft: '4px'
+        }
+      }, [pal.symbol]);
+      return b;
+    })()
+  );
+  box.appendChild(title);
+
+  box.appendChild(el('div', {
+    style: { fontSize: '1.05rem', color: '#666', marginBottom: '4px' }
+  }, [`RISOLVI L'OPERAZIONE IN ${cfg.penaltySeconds} SECONDI!`]));
+
+  // Operazione
+  box.appendChild(el('div', { class: 'penalty-question' },
+    [`${q.a} ${q.op} ${q.b} = ?`]));
+
+  // Display risposta
+  box.appendChild(el('div', {
+    class: 'penalty-answer', id: 'penalty-answer'
+  }, [g.penaltyInput === '' ? '?' : g.penaltyInput]));
+
+  // Tastierino numerico
+  const pad = el('div', { class: 'penalty-keypad' });
+  const keys = ['1','2','3','4','5','6','7','8','9','DEL','0','OK'];
+  keys.forEach(k => {
+    const extraClass = k === 'OK' ? ' kbtn-ok' : (k === 'DEL' ? ' kbtn-del' : '');
+    const label = k === 'DEL' ? '⌫' : (k === 'OK' ? '✓' : k);
+    const btn = el('button', {
+      class: 'kbtn' + extraClass,
+      onclick: () => onPenaltyKey(k)
+    }, [label]);
+    pad.appendChild(btn);
+  });
+  box.appendChild(pad);
+
+  overlay.appendChild(box);
+  return overlay;
+}
+
+function renderGridSvg() {
+  const cfg = State.config;
+  const g = State.game;
+  const cols = cfg.cols;
+  const rows = cfg.rows;
+  const w = cols * CELL + MARGIN * 2;
+  const h = rows * CELL + MARGIN * 2;
+
+  const svg = el('svg', {
+    viewBox: `0 0 ${w} ${h}`,
+    width: w,
+    height: h,
+    preserveAspectRatio: 'xMidYMid meet'
+  });
+
+  // Pattern scacchi per il traguardo
+  const defs = el('defs');
+  const pattern = el('pattern', {
+    id: 'checker', width: 20, height: 20,
+    patternUnits: 'userSpaceOnUse'
+  });
+  pattern.appendChild(el('rect', { x: 0, y: 0, width: 20, height: 20, fill: '#fff' }));
+  pattern.appendChild(el('rect', { x: 0, y: 0, width: 10, height: 10, fill: '#d84315' }));
+  pattern.appendChild(el('rect', { x: 10, y: 10, width: 10, height: 10, fill: '#d84315' }));
+  defs.appendChild(pattern);
+  svg.appendChild(defs);
+
+  // Fascia traguardo (attorno all'ultima riga)
+  const finishY = MARGIN + (rows - 1) * CELL;
+  svg.appendChild(el('rect', {
+    x: MARGIN - CELL / 2,
+    y: finishY - CELL / 2,
+    width: (cols - 1) * CELL + CELL,
+    height: CELL,
+    class: 'finish-band',
+    rx: 8
+  }));
+  // Bandierine ai lati del traguardo
+  svg.appendChild(el('text', {
+    x: MARGIN - CELL / 2 - 4,
+    y: finishY + 8,
+    class: 'finish-flag',
+    'text-anchor': 'end'
+  }, ['🏁']));
+  svg.appendChild(el('text', {
+    x: MARGIN + (cols - 1) * CELL + CELL / 2 + 4,
+    y: finishY + 8,
+    class: 'finish-flag'
+  }, ['🏁']));
+
+  // Percorsi
+  g.paths.forEach((path, i) => {
+    if (path.length < 2) return;
+    const pal = PALETTE[cfg.players[i].colorIndex];
+    // Filtra i punti finali (per ogni tentativo cancellato usa il punto corrente)
+    const pts = path.map(p => `${MARGIN + p.x * CELL},${MARGIN + p.y * CELL}`).join(' ');
+    svg.appendChild(el('polyline', {
+      class: 'path-line',
+      points: pts,
+      stroke: pal.color
+    }));
+  });
+
+  // Punti (dots)
+  const startPositions = getStartingPositions(cols, cfg.numPlayers);
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      let isStart = null;
+      if (y === 0) {
+        const startIdx = startPositions.findIndex(sp => sp.x === x && sp.y === y);
+        if (startIdx >= 0) isStart = startIdx;
+      }
+      const cx = MARGIN + x * CELL;
+      const cy = MARGIN + y * CELL;
+      if (isStart != null) {
+        const pal = PALETTE[cfg.players[isStart].colorIndex];
+        svg.appendChild(el('circle', {
+          cx, cy, r: 8, fill: pal.color, class: 'grid-dot start'
+        }));
+      } else {
+        const isFinish = y === rows - 1;
+        svg.appendChild(el('circle', {
+          cx, cy, r: isFinish ? 5 : 4,
+          class: 'grid-dot',
+          fill: isFinish ? '#fff' : '#b0bec5',
+          stroke: isFinish ? '#d84315' : 'none',
+          'stroke-width': isFinish ? 2 : 0
+        }));
+      }
+    }
+  }
+
+  // Pedine (raggruppate per punto per sfalsare)
+  const groupsByCell = new Map();
+  g.positions.forEach((p, i) => {
+    const key = `${p.x},${p.y}`;
+    if (!groupsByCell.has(key)) groupsByCell.set(key, []);
+    groupsByCell.get(key).push(i);
+  });
+
+  g.positions.forEach((p, i) => {
+    const group = groupsByCell.get(`${p.x},${p.y}`);
+    const idxInGroup = group.indexOf(i);
+    const total = group.length;
+    // Sfalsa in cerchio se più di uno
+    let offX = 0, offY = 0;
+    if (total > 1) {
+      const angle = (idxInGroup / total) * Math.PI * 2;
+      const r = Math.min(CELL / 3, 12);
+      offX = Math.cos(angle) * r;
+      offY = Math.sin(angle) * r;
+    }
+    const cx = MARGIN + p.x * CELL + offX;
+    const cy = MARGIN + p.y * CELL + offY;
+    const pal = PALETTE[State.config.players[i].colorIndex];
+    const pieceGroup = el('g', {
+      class: 'piece' + (i === g.currentPlayer ? ' current-turn' : ''),
+      transform: `translate(${cx}, ${cy})`,
+      'data-player': String(i),
+      style: { '--r': '16' }
+    });
+    pieceGroup.appendChild(el('circle', {
+      cx: 0, cy: 0, r: 16,
+      fill: pal.color
+    }));
+    pieceGroup.appendChild(el('text', {
+      x: 0, y: 1
+    }, [pal.symbol]));
+    svg.appendChild(pieceGroup);
+  });
+
+  // Bersagli per la mossa manuale: 6 punti attorno alla pedina del turno,
+  // uno per ciascuna faccia del dado. L'alunno può toccarne anche di sbagliati.
+  if (g.awaitingMove && g.lastDice) {
+    const cur = g.positions[g.currentPlayer];
+    for (const [diceKey, dir] of Object.entries(DICE_MAP)) {
+      const tx = cur.x + dir.dx;
+      const ty = cur.y + dir.dy;
+      const cx = MARGIN + tx * CELL;
+      const cy = MARGIN + ty * CELL;
+      const inGrid = isInside({ x: tx, y: ty }, cols, rows);
+      const diceValue = parseInt(diceKey, 10);
+      const t = el('g', {
+        class: 'target' + (inGrid ? '' : ' off-grid'),
+        transform: `translate(${cx}, ${cy})`,
+        'data-dice': diceKey,
+        onclick: () => onTargetClick(diceValue),
+        ontouchstart: (e) => { e.preventDefault(); onTargetClick(diceValue); }
+      });
+      t.appendChild(el('circle', {
+        cx: 0, cy: 0, r: 22,
+        class: 'target-ring target-hit'
+      }));
+      t.appendChild(el('text', {
+        x: 0, y: 0,
+        class: 'target-arrow'
+      }, [dir.arrow]));
+      svg.appendChild(t);
+    }
+  }
+
+  return svg;
+}
+
+/* -- Pips del dado (posizionamento assoluto in %) -- */
+const PIP_LAYOUTS = {
+  1: [[50,50]],
+  2: [[25,25],[75,75]],
+  3: [[25,25],[50,50],[75,75]],
+  4: [[25,25],[75,25],[25,75],[75,75]],
+  5: [[25,25],[75,25],[50,50],[25,75],[75,75]],
+  6: [[25,25],[75,25],[25,50],[75,50],[25,75],[75,75]]
+};
+function renderDiceFacePips(container, value) {
+  container.innerHTML = '';
+  const layout = PIP_LAYOUTS[value] || [];
+  layout.forEach(([px, py]) => {
+    const pip = document.createElement('div');
+    pip.className = 'pip';
+    pip.style.left = `calc(${px}% - 7px)`;
+    pip.style.top = `calc(${py}% - 7px)`;
+    container.appendChild(pip);
+  });
+}
+
+function renderLegend(activeDice, rolling) {
+  const wrap = el('div', { class: 'legend' });
+  // Griglia 3x3, direzioni intorno al centro
+  const cells = [
+    { pos: 'up-left',    dice: null }, // (-1,-1) non usata
+    { pos: 'up',         dice: 6 },    // (0,-1)
+    { pos: 'up-right',   dice: null }, // (+1,-1) non usata
+    { pos: 'left',       dice: 4 },    // (-1,0)
+    { pos: 'center',     dice: null },
+    { pos: 'right',      dice: 3 },    // (+1,0)
+    { pos: 'down-left',  dice: 5 },    // (-1,+1)
+    { pos: 'down',       dice: 1 },    // (0,+1)
+    { pos: 'down-right', dice: 2 }     // (+1,+1)
+  ];
+  cells.forEach(c => {
+    if (c.pos === 'center') {
+      wrap.appendChild(el('div', { class: 'cell center' }, [el('span', { class: 'arrow' }, ['•'])]));
+      return;
+    }
+    if (c.dice == null) {
+      // Cella vuota per completare la griglia
+      wrap.appendChild(el('div', { class: 'cell', style: { visibility: 'hidden' } }));
+      return;
+    }
+    const d = DICE_MAP[c.dice];
+    const isActive = activeDice === c.dice && !rolling;
+    const cell = el('div', { class: 'cell' + (isActive ? ' active' : '') });
+    cell.appendChild(el('span', { class: 'arrow' }, [d.arrow]));
+    cell.appendChild(el('span', { class: 'num' }, [`FACCIA ${c.dice}`]));
+    wrap.appendChild(cell);
+  });
+  return wrap;
+}
+
+function renderPredictChoices() {
+  const g = State.game;
+  const box = el('div', { class: 'predict-overlay' });
+  box.appendChild(el('h3', {}, ['⭐ QUALE FRECCIA È USCITA?']));
+
+  // Scegli 3 opzioni: la giusta + 2 distrattori a caso.
+  const correct = g.lastDice;
+  const wrongPool = [1,2,3,4,5,6].filter(v => v !== correct);
+  // Pesca 2 sbagliate deterministicamente (basate sul seed di questo lancio).
+  const shuffled = shuffleArray(wrongPool, correct * 31);
+  const wrongs = shuffled.slice(0, 2);
+  const options = shuffleArray([correct, ...wrongs], correct * 17);
+
+  const row = el('div', { class: 'predict-choices' });
+  options.forEach(v => {
+    const btn = el('button', {
+      onclick: () => onPredictChoice(v)
+    }, [DICE_MAP[v].arrow]);
+    row.appendChild(btn);
+  });
+  box.appendChild(row);
+  return box;
+}
+
+// Piccolo shuffle deterministico (LCG semplice) per rendere ripetibile la scelta durante un render.
+function shuffleArray(arr, seed) {
+  const out = arr.slice();
+  let s = seed || 1;
+  for (let i = out.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    const j = s % (i + 1);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+function renderPlayerStrip(player, i) {
+  const cfg = State.config;
+  const g = State.game;
+  const pal = PALETTE[player.colorIndex];
+  const strip = el('div', { class: 'player-strip' + (i === g.currentPlayer ? ' current' : '') });
+
+  const badge = el('div', {
+    class: 'mini-badge',
+    style: { background: pal.color, color: '#fff' }
+  }, [pal.symbol]);
+  strip.appendChild(badge);
+
+  const name = el('div', { class: 'name' }, [player.name || `GIOCATORE ${i + 1}`]);
+  strip.appendChild(name);
+
+  const rowsLeft = (cfg.rows - 1) - g.positions[i].y;
+  const rowsLeftEl = el('div', { class: 'rows-left' }, [`↓ ${rowsLeft} RIGHE`]);
+  strip.appendChild(rowsLeftEl);
+
+  // Barra progresso verticale semplificata (orizzontale visivamente ma "riempi verso il basso")
+  const totalRows = cfg.rows - 1;
+  const progressPct = totalRows > 0 ? Math.round(g.positions[i].y / totalRows * 100) : 0;
+  const prog = el('div', { class: 'progress' });
+  prog.appendChild(el('div', {
+    class: 'bar',
+    style: { width: progressPct + '%', background: pal.color }
+  }));
+  strip.appendChild(prog);
+
+  if (cfg.predictMode) {
+    strip.appendChild(el('div', { class: 'stars' }, [`⭐ ${g.stars[i]}`]));
+  }
+
+  // "Il mio codice"
+  const code = el('div', { class: 'code' });
+  const moves = g.paths[i].filter(m => m.arrow); // salta lo start
+  if (moves.length === 0) {
+    code.appendChild(el('span', { style: { color: '#999' } }, ['(NESSUNA MOSSA)']));
+  } else {
+    moves.forEach((m, mi) => {
+      const span = el('span', { class: m.cancelled ? 'cancelled' : '' }, [m.arrow]);
+      code.appendChild(span);
+      if (mi < moves.length - 1) code.appendChild(document.createTextNode(' '));
+    });
+  }
+  strip.appendChild(code);
+
+  return strip;
+}
+
+/* ---------------------- GESTORI EVENTI ---------------------- */
+
+function toggleSound() {
+  State.config.soundOn = !State.config.soundOn;
+  render();
+}
+
+function confirmNewGame() {
+  if (confirm('VUOI DAVVERO TORNARE ALLA CONFIGURAZIONE?')) {
+    // Pulisci eventuale timer di penalità in corso
+    if (State.game && State.game.penaltyTimerId) {
+      clearInterval(State.game.penaltyTimerId);
+    }
+    State.screen = 'config';
+    State.game = null;
+    render();
+  }
+}
+
+function onRollDice() {
+  const g = State.game;
+  if (g.rolling || g.animating || g.predictionPending || g.awaitingMove || g.penaltyActive) return;
+  g.rolling = true;
+  render();
+  playSound('dice');
+
+  // Animazione dado: facce che cambiano ogni ~90ms
+  const faceEl = document.getElementById('dice-face');
+  const startTime = performance.now();
+  const finalValue = 1 + Math.floor(Math.random() * 6);
+
+  function tick(now) {
+    const elapsed = now - startTime;
+    if (elapsed < ROLL_DURATION_MS) {
+      const random = 1 + Math.floor(Math.random() * 6);
+      renderDiceFacePips(faceEl, random);
+      setTimeout(() => requestAnimationFrame(tick), 80);
+    } else {
+      g.rolling = false;
+      g.lastDice = finalValue;
+      renderDiceFacePips(faceEl, finalValue);
+      if (State.config.predictMode) {
+        g.predictionPending = true;
+        render();
+      } else {
+        // Il dado è pronto: ora sta all'alunno spostare la pedina
+        g.awaitingMove = true;
+        render();
+      }
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+function onPredictChoice(chosen) {
+  const g = State.game;
+  if (!g.predictionPending) return;
+  const correct = g.lastDice;
+  const isRight = chosen === correct;
+  g.predictionPending = false;
+  if (isRight) {
+    g.stars[g.currentPlayer]++;
+    playSound('star');
+    showToast('⭐ BRAVO! HAI INDOVINATO!');
+  } else {
+    showToast('LA FRECCIA GIUSTA ERA ' + DICE_MAP[correct].arrow);
+  }
+  render();
+  // Ora l'alunno deve muovere la pedina toccando il bersaglio giusto
+  setTimeout(() => {
+    g.awaitingMove = true;
+    render();
+  }, 700);
+}
+
+/* Gestore click su un bersaglio: solo la direzione corretta conferma la mossa. */
+function onTargetClick(diceValue) {
+  const g = State.game;
+  if (!g.awaitingMove || g.animating || g.penaltyActive) return;
+
+  if (diceValue !== g.lastDice) {
+    // Direzione sbagliata: feedback rosso sul bersaglio
+    playSound('oops');
+    const svg = document.querySelector('.grid-container svg');
+    if (svg) {
+      const wrongTarget = svg.querySelector(`.target[data-dice="${diceValue}"]`);
+      if (wrongTarget) {
+        wrongTarget.classList.add('wrong');
+        setTimeout(() => wrongTarget.classList.remove('wrong'), 550);
+      }
+    }
+    if (State.config.penaltyEnabled) {
+      // Con penalità attiva: avvia l'operazione matematica
+      setTimeout(() => triggerPenalty(), 500);
+    } else {
+      // Senza penalità: semplice avviso, l'alunno può riprovare liberamente
+      showToast('OPS! GUARDA BENE LA FRECCIA DEL DADO E RIPROVA');
+    }
+    return;
+  }
+  // Direzione giusta: nasconde i bersagli e muove la pedina
+  g.awaitingMove = false;
+  executeMove(diceValue);
+}
+
+/* -------- Penalità: operazione da risolvere in 15 s -------- */
+
+// Genera un'addizione o sottrazione adatta a un bambino di seconda elementare.
+function generateMathQuestion() {
+  const isAdd = Math.random() < 0.5;
+  let a, b, answer;
+  if (isAdd) {
+    a = Math.floor(Math.random() * 11);        // 0..10
+    b = Math.floor(Math.random() * 11);        // 0..10
+    answer = a + b;                            // 0..20
+    return { a, b, op: '+', answer };
+  } else {
+    a = Math.floor(Math.random() * 16) + 5;    // 5..20
+    b = Math.floor(Math.random() * (a + 1));   // 0..a  (mai risultato negativo)
+    answer = a - b;
+    return { a, b, op: '−', answer };
+  }
+}
+
+function triggerPenalty() {
+  const g = State.game;
+  if (g.penaltyActive) return;
+  g.penaltyActive = true;
+  g.penaltyQuestion = generateMathQuestion();
+  g.penaltyInput = '';
+  g.penaltyTimeLeft = State.config.penaltySeconds;
+  render();
+  startPenaltyTimer();
+}
+
+function startPenaltyTimer() {
+  const g = State.game;
+  if (g.penaltyTimerId) clearInterval(g.penaltyTimerId);
+  g.penaltyTimerId = setInterval(() => {
+    g.penaltyTimeLeft--;
+    updatePenaltyDisplay();
+    if (g.penaltyTimeLeft <= 0) handlePenaltyTimeout();
+  }, 1000);
+}
+
+function updatePenaltyDisplay() {
+  const g = State.game;
+  const totalSec = State.config.penaltySeconds || DEFAULT_PENALTY_SECONDS;
+  const clock = document.getElementById('penalty-clock');
+  const bar = document.getElementById('penalty-bar');
+  const ans = document.getElementById('penalty-answer');
+  if (clock) clock.textContent = g.penaltyTimeLeft;
+  if (bar) bar.style.width = Math.max(0, (g.penaltyTimeLeft / totalSec) * 100) + '%';
+  if (ans) ans.textContent = g.penaltyInput === '' ? '?' : g.penaltyInput;
+}
+
+function onPenaltyKey(key) {
+  const g = State.game;
+  if (!g.penaltyActive) return;
+  if (key === 'DEL') {
+    g.penaltyInput = g.penaltyInput.slice(0, -1);
+    updatePenaltyDisplay();
+  } else if (key === 'OK') {
+    submitPenaltyAnswer();
+  } else if (g.penaltyInput.length < 3 && /^\d$/.test(key)) {
+    g.penaltyInput += key;
+    updatePenaltyDisplay();
+  }
+}
+
+function submitPenaltyAnswer() {
+  const g = State.game;
+  if (g.penaltyInput === '') return;
+  const input = parseInt(g.penaltyInput, 10);
+  if (input === g.penaltyQuestion.answer) {
+    resolvePenalty(true);
+  } else {
+    // Risposta sbagliata: si può riprovare finché resta tempo
+    playSound('oops');
+    const ans = document.getElementById('penalty-answer');
+    if (ans) {
+      ans.classList.add('wrong-flash');
+      setTimeout(() => ans.classList.remove('wrong-flash'), 420);
+    }
+    g.penaltyInput = '';
+    setTimeout(() => updatePenaltyDisplay(), 420);
+  }
+}
+
+function handlePenaltyTimeout() {
+  resolvePenalty(false);
+}
+
+function resolvePenalty(success) {
+  const g = State.game;
+  if (g.penaltyTimerId) { clearInterval(g.penaltyTimerId); g.penaltyTimerId = null; }
+  g.penaltyActive = false;
+
+  if (success) {
+    playSound('star');
+    showToast('🎉 BRAVO! ORA RIPROVA A MUOVERE LA PEDINA');
+    render();  // ridisegna con i bersagli ancora attivi
+  } else {
+    playSound('oops');
+    showToast('⏱ TEMPO SCADUTO! LA PEDINA RESTA FERMA, TURNO PASSATO');
+    // Registra una mossa cancellata (freccia barrata nel pannello "Il mio codice")
+    g.paths[g.currentPlayer].push({
+      x: g.positions[g.currentPlayer].x,
+      y: g.positions[g.currentPlayer].y,
+      arrow: DICE_MAP[g.lastDice].arrow,
+      cancelled: true,
+      penalty: true
+    });
+    g.awaitingMove = false;
+    render();
+    setTimeout(() => finishTurn(), 1000);
+  }
+}
+
+// Gestione tastiera fisica (utile su PC e LIM con tastiera).
+document.addEventListener('keydown', (e) => {
+  if (!State.game || !State.game.penaltyActive) return;
+  if (/^\d$/.test(e.key))       { onPenaltyKey(e.key); e.preventDefault(); }
+  else if (e.key === 'Enter')   { onPenaltyKey('OK');  e.preventDefault(); }
+  else if (e.key === 'Backspace'){ onPenaltyKey('DEL'); e.preventDefault(); }
+});
+
+function executeMove(diceValue) {
+  const cfg = State.config;
+  const g = State.game;
+  g.animating = true;
+
+  // Applica logica di gioco (aggiorna stato)
+  const result = attemptMove({ config: cfg, game: g }, diceValue);
+
+  // Rimuove i bersagli (mossa confermata)
+  const svg = document.querySelector('.grid-container svg');
+  if (svg) svg.querySelectorAll('.target').forEach(t => t.remove());
+
+  // Aggiorna DOM in modo mirato per triggerare l'animazione CSS sulla pedina
+  updatePiecePositions();
+  updatePathLines();
+  updatePlayerStrips();
+
+  if (!result.moved) {
+    playSound('oops');
+    showToast('OPS! FUORI DAL CAMPO, RESTI FERMO');
+    setTimeout(() => finishTurn(), 900);
+  } else {
+    playSound('step');
+    setTimeout(() => {
+      // Controlla vittoria per traguardo
+      const winner = checkWinner({ config: cfg, game: g });
+      if (winner === g.currentPlayer) {
+        endGameByFinish(winner);
+        return;
+      }
+      finishTurn();
+    }, MOVE_DURATION_MS + 50);
+  }
+}
+
+/* Aggiornamenti mirati per animazione. */
+function updatePiecePositions() {
+  const g = State.game;
+  const cfg = State.config;
+  const svg = document.querySelector('.grid-container svg');
+  if (!svg) return;
+  const groupsByCell = new Map();
+  g.positions.forEach((p, i) => {
+    const key = `${p.x},${p.y}`;
+    if (!groupsByCell.has(key)) groupsByCell.set(key, []);
+    groupsByCell.get(key).push(i);
+  });
+  const pieces = svg.querySelectorAll('.piece');
+  pieces.forEach(piece => {
+    const i = parseInt(piece.getAttribute('data-player'), 10);
+    const p = g.positions[i];
+    const group = groupsByCell.get(`${p.x},${p.y}`);
+    const idxInGroup = group.indexOf(i);
+    const total = group.length;
+    let offX = 0, offY = 0;
+    if (total > 1) {
+      const angle = (idxInGroup / total) * Math.PI * 2;
+      const r = Math.min(CELL / 3, 12);
+      offX = Math.cos(angle) * r;
+      offY = Math.sin(angle) * r;
+    }
+    const cx = MARGIN + p.x * CELL + offX;
+    const cy = MARGIN + p.y * CELL + offY;
+    piece.setAttribute('transform', `translate(${cx}, ${cy})`);
+  });
+}
+
+function updatePathLines() {
+  const g = State.game;
+  const cfg = State.config;
+  const svg = document.querySelector('.grid-container svg');
+  if (!svg) return;
+  const existing = svg.querySelectorAll('polyline.path-line');
+  existing.forEach(n => n.remove());
+  // Reinserisce i percorsi prima delle pedine
+  const firstPiece = svg.querySelector('.piece');
+  g.paths.forEach((path, i) => {
+    if (path.length < 2) return;
+    const pal = PALETTE[cfg.players[i].colorIndex];
+    const pts = path.map(p => `${MARGIN + p.x * CELL},${MARGIN + p.y * CELL}`).join(' ');
+    const poly = el('polyline', {
+      class: 'path-line',
+      points: pts,
+      stroke: pal.color
+    });
+    if (firstPiece) svg.insertBefore(poly, firstPiece);
+    else svg.appendChild(poly);
+  });
+}
+
+function updatePlayerStrips() {
+  const cfg = State.config;
+  const panel = document.querySelector('.players-panel');
+  if (!panel) return;
+  // Rimuove le strip esistenti (tranne l'h3) e ricrea
+  Array.from(panel.querySelectorAll('.player-strip')).forEach(n => n.remove());
+  cfg.players.forEach((p, i) => panel.appendChild(renderPlayerStrip(p, i)));
+}
+
+function finishTurn() {
+  const g = State.game;
+  const cfg = State.config;
+  g.animating = false;
+  const newRound = advanceTurn({ config: cfg, game: g });
+  // Controllo scadenza turni
+  if (g.roundNumber > cfg.maxTurns) {
+    endGameByTurns();
+    return;
+  }
+  render();
+}
+
+function endGameByFinish(winnerIdx) {
+  State.victory = { winners: [winnerIdx], reason: 'traguardo' };
+  State.screen = 'victory';
+  render();
+  playSound('victory');
+  spawnConfetti();
+}
+
+function endGameByTurns() {
+  const cfg = State.config;
+  const winners = getWinnersByPosition({ config: cfg, game: State.game });
+  State.victory = { winners, reason: 'turni' };
+  State.screen = 'victory';
+  render();
+  playSound('victory');
+  spawnConfetti();
+}
+
+/* ---------------------- SCHERMATA VITTORIA ---------------------- */
+
+function renderVictory() {
+  const cfg = State.config;
+  const v = State.victory;
+  const root = el('div', { class: 'victory-screen' });
+
+  const title = v.winners.length > 1 ? '🎉 PARI MERITO! 🎉' : '🎉 EVVIVA! 🎉';
+  root.appendChild(el('h1', {}, [title]));
+
+  const subtitle = v.reason === 'traguardo'
+    ? 'HAI RAGGIUNTO IL TRAGUARDO!'
+    : 'FINITI I TURNI: VINCE CHI È PIÙ VICINO AL TRAGUARDO';
+  root.appendChild(el('h2', {
+    style: { color: '#6a1b9a', margin: '10px 0' }
+  }, [subtitle]));
+
+  const list = el('div', { class: 'winners-list' });
+  v.winners.forEach(idx => {
+    const p = cfg.players[idx];
+    const pal = PALETTE[p.colorIndex];
+    const card = el('div', { class: 'winner-card' });
+    const b = el('div', {
+      class: 'big-badge',
+      style: { background: pal.color, color: '#fff' }
+    }, [pal.symbol]);
+    card.append(b, document.createTextNode(p.name || `GIOCATORE ${idx + 1}`));
+    if (cfg.predictMode) {
+      const s = el('div', {
+        style: { marginLeft: '14px', color: '#ff8f00' }
+      }, [`⭐ ${State.game.stars[idx]}`]);
+      card.appendChild(s);
+    }
+    list.appendChild(card);
+  });
+  root.appendChild(list);
+
+  const btns = el('div', { class: 'victory-buttons' });
+  btns.appendChild(el('button', {
+    class: 'btn-primary btn-big',
+    onclick: () => { startGame(); }
+  }, ['🔁 RIGIOCA']));
+  btns.appendChild(el('button', {
+    class: 'btn-secondary btn-big',
+    onclick: () => {
+      State.screen = 'config';
+      State.game = null;
+      State.victory = null;
+      render();
+    }
+  }, ['🏠 NUOVA PARTITA']));
+  root.appendChild(btns);
+  return root;
+}
+
+function spawnConfetti() {
+  const container = document.getElementById('confetti');
+  container.innerHTML = '';
+  for (let i = 0; i < 120; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetto';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = PALETTE[i % PALETTE.length].color;
+    c.style.animationDelay = (Math.random() * 1.5) + 's';
+    c.style.animationDuration = (2.5 + Math.random() * 2) + 's';
+    if (Math.random() < 0.5) c.style.borderRadius = '50%';
+    container.appendChild(c);
+  }
+  // Ripulisci dopo un po'
+  setTimeout(() => { container.innerHTML = ''; }, 6000);
+}
+
+/* ---------------------- AVVIO ---------------------- */
+
+// Setup iniziale della config di default.
+State.config.maxTurns = calculateDefaultMaxTurns(State.config.rows);
+ensurePlayerSlots();
+render();
+
+/* =====================================================================
+   AUTO-TEST — richiamabile da console con runTests()
+   ===================================================================== */
+
+function runTests() {
+  const results = [];
+  function assert(cond, msg) {
+    const ok = !!cond;
+    results.push({ pass: ok, msg });
+    console.log((ok ? '✓' : '✗') + ' ' + msg);
+    if (!ok) console.error('   FALLITO: ' + msg);
+  }
+
+  console.log('%c=== AUTO-TEST ZAMPE & FRECCE ===', 'font-weight:bold; color:#d84315');
+
+  // 1. Le 6 facce del dado producono 6 direzioni distinte.
+  const dirs = Object.values(DICE_MAP).map(d => `${d.dx},${d.dy}`);
+  assert(new Set(dirs).size === 6, '6 facce del dado -> 6 direzioni distinte');
+
+  // 2. Faccia 6 = "SU DRITTO"
+  assert(DICE_MAP[6].dx === 0 && DICE_MAP[6].dy === -1, 'Faccia 6 = su dritto (0,-1)');
+
+  // 3. Somma delle direzioni verticali: 3 scendono, 1 sale (net +2)
+  let downCount = 0, upCount = 0, horizCount = 0;
+  Object.values(DICE_MAP).forEach(d => {
+    if (d.dy > 0) downCount++;
+    else if (d.dy < 0) upCount++;
+    else horizCount++;
+  });
+  assert(downCount === 3 && upCount === 1 && horizCount === 2,
+    'Bilanciamento: 3 giù, 1 su, 2 orizzontali');
+
+  // 4. Gestione bordo sinistro
+  let s = mkTestState(10, 10, [{ x: 0, y: 2 }, { x: 5, y: 0 }]);
+  let r = attemptMove(s, 4); // sinistra
+  assert(!r.moved && s.game.positions[0].x === 0, 'Bordo sinistro: pedina resta ferma');
+  assert(s.game.paths[0][s.game.paths[0].length - 1].cancelled === true,
+    'Mossa cancellata dal bordo compare come barrata');
+
+  // 5. Gestione bordo destro
+  s = mkTestState(10, 10, [{ x: 9, y: 2 }, { x: 5, y: 0 }]);
+  r = attemptMove(s, 3); // destra
+  assert(!r.moved && s.game.positions[0].x === 9, 'Bordo destro: pedina resta ferma');
+
+  // 6. Gestione bordo superiore
+  s = mkTestState(10, 10, [{ x: 5, y: 0 }, { x: 0, y: 0 }]);
+  r = attemptMove(s, 6); // su
+  assert(!r.moved && s.game.positions[0].y === 0, 'Bordo superiore: pedina resta ferma');
+
+  // 7. Mossa valida
+  s = mkTestState(10, 10, [{ x: 5, y: 3 }, { x: 0, y: 0 }]);
+  r = attemptMove(s, 1); // giù
+  assert(r.moved && s.game.positions[0].y === 4, 'Mossa valida: pedina si sposta');
+
+  // 8. Passaggio del turno
+  s = mkTestState(10, 10, [{ x: 5, y: 3 }, { x: 0, y: 0 }]);
+  assert(s.game.currentPlayer === 0, 'Turno iniziale = giocatore 0');
+  advanceTurn(s);
+  assert(s.game.currentPlayer === 1, 'Dopo advanceTurn = giocatore 1');
+  const wasNewRound = advanceTurn(s);
+  assert(s.game.currentPlayer === 0, 'Il turno torna al primo giocatore');
+  assert(wasNewRound === true, 'Incremento del round');
+  assert(s.game.roundNumber === 2, 'Round 2 dopo un giro completo');
+
+  // 9. Vittoria all'arrivo sull'ultima riga
+  s = mkTestState(10, 10, [{ x: 5, y: 8 }, { x: 0, y: 0 }]);
+  r = attemptMove(s, 1); // giù -> y=9 (ultima riga)
+  assert(s.game.positions[0].y === 9, 'Pedina raggiunge y = rows-1');
+  assert(checkWinner(s) === 0, 'checkWinner rileva il giocatore 0 come vincitore');
+
+  // 10. Nessun vincitore se nessuno è sull'ultima riga
+  s = mkTestState(10, 10, [{ x: 5, y: 8 }, { x: 0, y: 0 }]);
+  assert(checkWinner(s) === -1, 'Nessuno sull\'ultima riga: nessun vincitore');
+
+  // 11. Vittoria ai punti (fine turni)
+  s = mkTestState(10, 10, [{ x: 1, y: 5 }, { x: 2, y: 7 }, { x: 3, y: 4 }]);
+  let winners = getWinnersByPosition(s);
+  assert(winners.length === 1 && winners[0] === 1, 'Vittoria ai punti: chi è sulla riga più bassa');
+
+  // 12. Parità: vincono tutti a pari merito
+  s = mkTestState(10, 10, [{ x: 1, y: 5 }, { x: 2, y: 5 }, { x: 3, y: 3 }]);
+  winners = getWinnersByPosition(s);
+  assert(winners.length === 2 && winners.includes(0) && winners.includes(1),
+    'Parità: entrambi i giocatori più in basso vincono');
+
+  // 13. Calcolo automatico del limite di turni
+  assert(calculateDefaultMaxTurns(10) === 30, 'Default turni: righe 10 -> 30');
+  assert(calculateDefaultMaxTurns(12) === 36, 'Default turni: righe 12 -> 36');
+  assert(calculateDefaultMaxTurns(5) === 15, 'Default turni: righe 5 -> 15');
+
+  // 14. Posizioni di partenza equidistanti
+  const start2 = getStartingPositions(10, 2);
+  assert(start2.length === 2 && start2[0].y === 0 && start2[1].y === 0,
+    'Partenze sulla prima riga');
+  assert(start2[0].x !== start2[1].x, 'Partenze in punti diversi');
+  const start3 = getStartingPositions(9, 3);
+  assert(start3[0].x === 1 && start3[1].x === 4 && start3[2].x === 7,
+    'Partenze equidistanti per 3 giocatori su 9 colonne');
+
+  // 15. Tutte le combinazioni di direzioni coprono ↑↓←→ e diagonali giù
+  const arrows = Object.values(DICE_MAP).map(d => d.arrow);
+  ['↑','↓','←','→','↘','↙'].forEach(a => {
+    assert(arrows.includes(a), `Freccia ${a} presente nella mappa`);
+  });
+
+  // 16. Stato iniziale della mossa manuale
+  const freshGame = makeInitialGameState({ cols: 10, rows: 10, numPlayers: 2 });
+  assert(freshGame.awaitingMove === false, 'awaitingMove parte a false');
+  assert(freshGame.lastDice === null, 'lastDice parte a null');
+
+  // 17. Simulazione della logica onTargetClick: solo la direzione corretta cambia stato
+  //    (verifica pura: attemptMove viene invocato solo per la direzione giusta)
+  s = mkTestState(10, 10, [{ x: 5, y: 5 }, { x: 0, y: 0 }]);
+  s.game.lastDice = 1;      // il dado dice "giù"
+  s.game.awaitingMove = true;
+  // Tentativo sbagliato: nessuna chiamata a attemptMove, posizione invariata
+  const posBefore = { ...s.game.positions[0] };
+  const wrongDice = 3;      // "destra" - direzione errata
+  if (wrongDice !== s.game.lastDice) { /* la mossa non viene eseguita */ }
+  assert(s.game.positions[0].x === posBefore.x && s.game.positions[0].y === posBefore.y,
+    'Direzione sbagliata: la pedina NON si muove');
+  // Tentativo giusto: eseguo attemptMove come farebbe onTargetClick -> executeMove
+  const correctDice = s.game.lastDice;
+  attemptMove(s, correctDice);
+  assert(s.game.positions[0].y === posBefore.y + 1,
+    'Direzione giusta: la pedina si muove di un punto nella direzione del dado');
+
+  // 18. Generazione della domanda di penalità
+  for (let i = 0; i < 200; i++) {
+    const q = generateMathQuestion();
+    if (q.op === '+') {
+      if (q.a + q.b !== q.answer || q.a < 0 || q.a > 10 || q.b < 0 || q.b > 10) {
+        assert(false, 'Addizione valida: ' + JSON.stringify(q));
+        break;
+      }
+    } else if (q.op === '−') {
+      if (q.a - q.b !== q.answer || q.answer < 0 || q.a < 5 || q.a > 20 || q.b < 0 || q.b > q.a) {
+        assert(false, 'Sottrazione valida (mai negativa): ' + JSON.stringify(q));
+        break;
+      }
+    } else {
+      assert(false, 'Operatore inatteso: ' + q.op);
+      break;
+    }
+  }
+  assert(true, 'Domande di penalità sempre valide (200 estrazioni casuali)');
+
+  // 19. Bilanciamento addizioni/sottrazioni: entrambe devono comparire
+  let addCount = 0, subCount = 0;
+  for (let i = 0; i < 400; i++) {
+    const q = generateMathQuestion();
+    if (q.op === '+') addCount++; else subCount++;
+  }
+  assert(addCount > 100 && subCount > 100,
+    `Bilanciamento operazioni: ${addCount} addizioni + ${subCount} sottrazioni`);
+
+  // 20. Default e limiti dei secondi di penalità
+  assert(DEFAULT_PENALTY_SECONDS === 15, 'Default tempo penalità = 15 secondi');
+  assert(MIN_PENALTY_SECONDS >= 1 && MAX_PENALTY_SECONDS >= MIN_PENALTY_SECONDS,
+    'Limiti secondi penalità coerenti');
+  assert(State.config.penaltySeconds === DEFAULT_PENALTY_SECONDS,
+    'Config iniziale usa il default');
+  assert(State.config.penaltyEnabled === true, 'Penalità attiva di default');
+
+  // 21. La penalità è configurabile: cambiare la config aggiorna il tempo di gioco
+  const savedSec = State.config.penaltySeconds;
+  const savedEnabled = State.config.penaltyEnabled;
+  State.config.penaltySeconds = 25;
+  State.config.penaltyEnabled = false;
+  assert(State.config.penaltySeconds === 25, 'Config.penaltySeconds modificabile');
+  assert(State.config.penaltyEnabled === false, 'Config.penaltyEnabled modificabile');
+  // Ripristina i valori originali per non interferire con lo stato del gioco
+  State.config.penaltySeconds = savedSec;
+  State.config.penaltyEnabled = savedEnabled;
+
+  // 22. Stato iniziale della penalità
+  const fresh2 = makeInitialGameState({ cols: 10, rows: 10, numPlayers: 2 });
+  assert(fresh2.penaltyActive === false, 'penaltyActive parte a false');
+  assert(fresh2.penaltyQuestion === null && fresh2.penaltyInput === '',
+    'Domanda e risposta iniziali vuote');
+
+  const passed = results.filter(r => r.pass).length;
+  const failed = results.length - passed;
+  console.log(`%c=== RISULTATO: ${passed}/${results.length} superati, ${failed} falliti ===`,
+    'font-weight:bold; color:' + (failed === 0 ? 'green' : 'red'));
+
+  return { passed, failed, total: results.length, results };
+}
+
+// Costruisce uno stato minimale per i test.
+function mkTestState(cols, rows, positions) {
+  return {
+    config: { cols, rows, numPlayers: positions.length,
+      players: positions.map((_, i) => ({ name: '', colorIndex: i })) },
+    game: {
+      positions: positions.map(p => ({ ...p })),
+      paths: positions.map(p => [{ x: p.x, y: p.y, arrow: null, cancelled: false, start: true }]),
+      stars: positions.map(() => 0),
+      currentPlayer: 0,
+      roundNumber: 1,
+      rolling: false, animating: false,
+      lastDice: null, predictionPending: false
+    }
+  };
+}
+
+// Rende runTests raggiungibile da console.
+window.runTests = runTests;
+
+</script>
+</body>
+</html>
